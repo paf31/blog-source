@@ -1,0 +1,37 @@
+body {
+    font-family: 'Lato', Helvetica, Sans-Serif;
+    color: #404040;
+}
+
+#wrapper {
+    width: 960px;
+    margin: 0 auto;
+}
+
+p {
+    font-weight: 300;
+}
+
+h1, h2, h3 {
+    font-weight: 400;
+}
+
+strong {
+    font-weight: 700;
+}
+
+pre {
+    margin: auto 50px;
+}
+
+code {
+    font-family: 'Ubuntu Mono', Monospace;
+}
+
+blockquote {
+    font-family: 'Ubuntu Mono', Monospace;
+    border: 1px solid #D0D0D0;
+    background: #F0F0F0;
+    padding: 0px 10px;
+    margin: 0 50px;
+}
