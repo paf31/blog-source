@@ -15,6 +15,14 @@ writerOptions = defaultWriterOptions
   { writerHTMLMathMethod = MathJax "" 
   }
 
+feedConfig :: FeedConfiguration
+feedConfig = FeedConfiguration
+  { feedTitle = "blog.functorial.com"
+  , feedDescription = ""
+  , feedAuthorName = "Phil Freeman"
+  , feedAuthorEmail = "paf31@cantab.net"
+  , feedRoot = "http://blog.functorial.com" }
+
 main :: IO ()
 main = hakyll $ do
     -- Compress CSS
@@ -37,6 +45,12 @@ main = hakyll $ do
         >>> applyTemplateCompiler "templates/index.html"
         >>> applyTemplateCompiler "templates/default.html"
         >>> relativizeUrlsCompiler
+
+    -- RSS Feed
+    match "feed.xml" $ route idRoute
+    create "feed.xml" $ requireAll_ "posts/*" 
+        >>> arr (take 10 . reverse . chronological)
+        >>> renderRss feedConfig
 
     -- Read templates
     match "templates/*" $ compile templateCompiler
