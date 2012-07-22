@@ -35,3 +35,20 @@ blockquote {
     padding: 0px 10px;
     margin: 0 50px;
 }
+
+.haskell > .kw {
+    font-weight: bold;
+    color: #000080;
+}
+
+.haskell > .fu {
+    color: #800000;
+}
+
+.haskell > .dt {
+    color: #0000FF;
+}
+
+.haskell > .ot {
+    color: #008000;
+}
