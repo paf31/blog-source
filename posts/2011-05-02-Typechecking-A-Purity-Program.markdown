@@ -2,6 +2,8 @@
 title: Typechecking a Purity Program
 author: Phil Freeman
 date: 2011/05/02
+description: An explanation of the typechecking algorithm in the Purity programming language
+tags: Compilers
 ---
 
 The Purity compiler uses a modified version of Algorithm W to verify the type safety of its programs. I am going to write a little about the common implementation of Algorithm W in the simply typed lambda calculus, and then its relationship with the Purity typechecking algorithm.

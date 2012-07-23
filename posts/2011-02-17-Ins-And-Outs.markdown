@@ -2,6 +2,8 @@
 title: The Ins and Outs of Fixed Point Types
 author: Phil Freeman
 date: 2011/02/17
+description: The algebra and coalegbra morphisms for least and greatest fixed point types
+tags: Recursion
 ---
 
 The purpose of this note is to derive the $F$-(co-)algebra structures on the least and greatest fixed points of $F$ expressed in terms of universal and existential types. The method also extends to mutually recursive types by virtue of the fact that these types are the fixed points of functors on the power category $\mathbb{C}^n$ for some $n$, as explained in my last post.

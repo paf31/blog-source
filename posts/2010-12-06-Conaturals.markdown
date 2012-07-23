@@ -2,6 +2,8 @@
 title: Greatest Fixed Points Part 2 - The Conaturals
 author: Phil Freeman
 date: 2010/12/06
+description: The Conatural numbers and their arithmetic, using greatest fixed points.
+tags: C#, Recursion
 ---
 
 As a continuation of my last post on the encoding of greatest fixed point types, I\'d like to give a treatment of another interesting greatest fixed point type - the conatural numbers, the greatest fixed point of the functor

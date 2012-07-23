@@ -2,6 +2,8 @@
 title: Abstraction Elimination in Purity
 author: Phil Freeman
 date: 2012/05/01
+description: An explanation of abstraction elimination in the Purity programming language.
+tags: Compilers
 ---
 
 I\'d like to write a little bit about the process of abstraction elimation in the Purity language. Abstraction elimination is the process by which lambda expressions get transformed into point-free code.

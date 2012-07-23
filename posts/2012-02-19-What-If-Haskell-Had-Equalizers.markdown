@@ -2,6 +2,8 @@
 title: What if Haskell had (co)-eqiualizers?
 author: Phil Freeman
 date: 2012/02/19
+description: A thought-experiment on the possibility of extending the Haskell type system with equalizers and coequalizers.
+tags: Haskell, Category Theory
 ---
 
 Equalizers and coequalizers are two categorical constructions that I have never been fully comfortable with. I understand them in theory, such as how products and equalizers can be used to construct all finite limits, and I understand their interpretations in the category of sets, but I could never see how they should really be used in general. So I decided to try to interpret them via the Curry-Howard isomorphism in the hope of gaining a bit more understanding, hence the title of this post.

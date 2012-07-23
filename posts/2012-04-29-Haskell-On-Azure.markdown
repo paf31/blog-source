@@ -2,6 +2,8 @@
 title: Haskell On Azure
 author: Phil Freeman
 date: 2012/04/29
+description: Running HappStack in an Azure worker role instance, and using the tablestorage cabal package.
+tags: Haskell, Azure
 ---
 
 Today, as a change of topic, I\'m going to write about getting a Haskell web application to run on Windows Azure.

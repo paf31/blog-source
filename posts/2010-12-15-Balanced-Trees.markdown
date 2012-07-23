@@ -2,6 +2,8 @@
 title: Value Lifting, Bounded Existentials and the Visitor Pattern
 author: Phil Freeman
 date: 2010/12/15
+description: Encoding balanced trees in C# using generics
+tags: C#
 ---
 
 Suppose we want to define a type of balanced binary trees in C#. That is, we want to define a type `Balanced<T>` of trees such that it is a type error to attempt to create a tree in `Balanced<T>` which has nodes at different depths. How might we go about this?

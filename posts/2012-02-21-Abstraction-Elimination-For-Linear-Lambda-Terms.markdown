@@ -2,6 +2,8 @@
 title: Abstraction Elimination For Linear Lambda Terms
 author: Phil Freeman
 date: 2012/02/21
+description: An abstraction elimination for linear lambda terms
+tags: Haskell, PolyKinds
 ---
 
 Last time, I wrote a little bit about encoding linear lambda terms in Haskell using promoted datatypes to represent the set of variables appearing in a term. This time I\'d like to look at an algorithm for abstraction elimination for linear lambda terms.

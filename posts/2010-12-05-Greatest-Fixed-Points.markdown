@@ -2,6 +2,8 @@
 title: Greatest Fixed Points and Anamorphisms in C#
 author: Phil Freeman
 date: 2010/12/05
+description: An encoding of greatest fixed points in C#, with streams as an example.
+tags: C#, Recursion
 ---
 
 As promised in my last post, I\'m now going to go over how to encode greatest fixed point types and their anamorphisms in C# using existentials.

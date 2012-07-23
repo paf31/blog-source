@@ -2,6 +2,8 @@
 title: Fun With PolyKinds: Polykinded Folds
 author: Phil Freeman
 date: 2012/02/02
+description: Generalizing folds and unfolds to other kinds using the PolyKinds GHC Extension..
+tags: Haskell, PolyKinds, Recursion
 ---
 
 In the following, I will write a polykinded version of the combinators `fold` and `unfold`, along with three examples: folds for regular datatypes (specialized to kind `*`), folds for nested datatypes (specialized to kind `* -> *`), and folds for mutually recursive data types (specialized to the product kind `(*, *)`). The approach should generalise easily enough to things such as types indexed by another kind (e.g. by specializing to kind `Nat -> *`, using the `DataKinds` extension), or higher order nested datatypes (e.g. by specializing to kind `(* -> *) -> (* -> *)`).

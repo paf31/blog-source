@@ -2,6 +2,8 @@
 title: Least Fixed Points and Catamorphisms in C#
 author: Phil Freeman
 date: 2010/12/04
+description: An encoding of least fixed point types in C#, with finite lists as an example.
+tags: C#, Recursion
 ---
 
 I\'ve been trying to find a nice way to encode least fixed points in C# for a while. At first, I tried to define a functor interface. Unfortunately, due to C#\'s lack of type constructor polymorphism, there isn\'t really a nice way to do this in a type-safe way. However, there is a nice way to encode least fixed points without using the functorial structure at all.

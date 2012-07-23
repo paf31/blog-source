@@ -2,6 +2,8 @@
 title: Solving Constraints Generically
 author: Phil Freeman
 date: 2012/02/06
+description: Generalizing constraint solving algorithms over arbitrary term algebras.
+tags: Haskell, Compilers
 ---
 
 In this post, I\'d like to revisit Algorithm W, which I discussed when I wrote about Purity\'s typechecker.

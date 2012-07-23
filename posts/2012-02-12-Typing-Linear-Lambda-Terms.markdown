@@ -2,6 +2,8 @@
 title: Typing Linear Lambda Terms
 author: Phil Freeman
 date: 2012/02/12
+description: An encoding of linear lambda terms in Haskell which prevents the expression of invalid terms.
+tags: Haskell, PolyKinds
 ---
 
 In this post, I\'d like to look at the problem of encoding linear lambda terms in Haskell. Specifically, I\'d like to look at how to restrict the class of expressible lambda terms to only allow variables to be applied exactly once.

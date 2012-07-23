@@ -2,6 +2,8 @@
 title: A Lemma on Fixed Points
 author: Phil Freeman
 date: 2011/01/27
+description: An equation involving fixed points of functors.
+tags: Type Theory, Recursion
 ---
 
 I was reading some of my older notes on least fixed point types and found this. It\'s hardly groundbreaking I\'m sure you\'ll agree, but I thought it was quite a nice little result.

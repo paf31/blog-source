@@ -2,6 +2,8 @@
 title: Generalizing O(1) Snoc On Lists
 author: Phil Freeman
 date: 2012/06/17
+description: A generalization of snoc to traversable data structures
+tags: Haskell
 ---
 
 I\'ve recently been thinking about how to generalize an efficient version of the `snoc` operation on lists.

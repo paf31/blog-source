@@ -2,6 +2,8 @@
 title: Doubly-Recursive Functions, Generically
 author: Phil Freeman
 date: 2012/02/12
+description: A generic formulation of 'doubly-recursive' functions in Haskell
+tags: Haskell, Recursion
 ---
 
 Consider the following recursive function definitions. What do they have in common?

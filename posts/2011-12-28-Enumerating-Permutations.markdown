@@ -2,6 +2,8 @@
 title: Enumerating Permutations
 author: Phil Freeman
 date: 2011/12/28
+description: Deriving the 'next permutation' using equational reasoning in Haskell
+tags: Haskell
 ---
 
 Consider the following Haskell function which enumerates permutations of a given length:
