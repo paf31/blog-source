@@ -41,10 +41,21 @@ main = hakyll $ do
     match "index.html" $ route idRoute
     create "index.html" $ constA mempty
         >>> arr (setField "title" "blog.functorial.com")
+        >>> requireA "tags" (setFieldA "tagcloud" (renderTagCloud'))
         >>> requireAllA "posts/*" addPostList
         >>> applyTemplateCompiler "templates/index.html"
         >>> applyTemplateCompiler "templates/default.html"
         >>> relativizeUrlsCompiler
+
+    -- Tags
+    create "tags" $
+        requireAll "posts/*" (\_ ps -> readTags ps :: Tags String)
+
+    -- Add a tag list compiler for every tag
+    match "tags/*" $ route $ setExtension ".html"
+    metaCompile $ require_ "tags"
+        >>> arr tagsMap
+        >>> arr (map (\(t, p) -> (tagIdentifier t, makeTagList t p)))
 
     -- RSS Feed
     match "feed.xml" $ route idRoute
@@ -54,6 +65,12 @@ main = hakyll $ do
 
     -- Read templates
     match "templates/*" $ compile templateCompiler
+  where
+    renderTagCloud' :: Compiler (Tags String) String
+    renderTagCloud' = renderTagCloud tagIdentifier 100 120
+
+    tagIdentifier :: String -> Identifier (Page String)
+    tagIdentifier = fromCapture "tags/*"
 
 addPostList :: Compiler (Page String, [Page String]) (Page String)
 addPostList = setFieldA "posts" $
@@ -61,3 +78,14 @@ addPostList = setFieldA "posts" $
         >>> require "templates/postitem.html" (\p t -> map (applyTemplate t) p)
         >>> arr mconcat
         >>> arr pageBody
+
+makeTagList :: String
+            -> [Page String]
+            -> Compiler () (Page String)
+makeTagList tag posts =
+    constA (mempty, posts)
+        >>> addPostList
+        >>> arr (setField "title" ("Posts tagged '" ++ tag ++ "'"))
+        >>> applyTemplateCompiler "templates/tag.html"
+        >>> applyTemplateCompiler "templates/default.html"
+        >>> relativizeUrlsCompiler

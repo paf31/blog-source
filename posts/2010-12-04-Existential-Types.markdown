@@ -3,7 +3,7 @@ title: Existential Types in C#
 author: Phil Freeman
 date: 2010/12/04
 description: An encoding of existential types in C#, with some examples.
-tags: C#
+tags: CSharp
 ---
 
 I was thinking about existential types recently, what they might be useful for, and if it was possible to encode them in C#.

@@ -3,7 +3,7 @@ title: Finite Automata and Typed String Parsing
 author: Phil Freeman
 date: 2011/02/02
 description: A type-safe version of the scanf function in C#.
-tags: C#, Parsing
+tags: CSharp, Parsing
 ---
 
 Define a finite deterministic automaton with values in type `T` and inputs from an alphabet `I` as follows:

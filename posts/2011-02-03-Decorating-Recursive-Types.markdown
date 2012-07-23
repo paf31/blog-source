@@ -3,7 +3,7 @@ title: Decorating Recursive Types
 author: Phil Freeman
 date: 2012/02/03
 description: An attempt to extend recursive types in a way which is compatible with subclassing.
-tags: C#, Recursion
+tags: CSharp, Recursion
 ---
 
 Suppose we have a recursive type and we want to add additional functionality in such a way that each structurally smaller value also gets that additional functionality. For example, consider the following type, whose values look like nameless lambda terms (de Bruijin terms):

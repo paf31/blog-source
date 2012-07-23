@@ -3,7 +3,7 @@ title: Histomorphisms, Dynamic Programming and the Knapsack Problem
 author: Phil Freeman
 date: 2010/12/10
 description: Using histomorphisms via least fixed points to solve dynamic programming problems.
-tags: C#, Recursion
+tags: CSharp, Recursion
 ---
 
 Histomorphisms generalize the concept of course-of-value iteration to arbitrary recursive data types. They are useful for expressing solutions to problems which depend optimally on solutions to structurally smaller problems. That is, histomorphisms are useful for applying the concepts of dynamic programming over recursive datatypes.

@@ -1,5 +1,5 @@
 ---
-title: What if Haskell had (co)-eqiualizers?
+title: What if Haskell had (co)-equalizers?
 author: Phil Freeman
 date: 2012/02/19
 description: A thought-experiment on the possibility of extending the Haskell type system with equalizers and coequalizers.

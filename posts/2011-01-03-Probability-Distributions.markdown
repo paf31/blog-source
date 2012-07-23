@@ -3,7 +3,7 @@ title: LINQ to Probability Distributions
 author: Phil Freeman
 date: 2011/01/03
 description: LINQ syntax for working with probability distributions
-tags: C#, LINQ
+tags: CSharp, LINQ
 ---
 
 Here is an example of an interesting monad which I have not seen expressed anywhere using LINQ\'s extension methods.
