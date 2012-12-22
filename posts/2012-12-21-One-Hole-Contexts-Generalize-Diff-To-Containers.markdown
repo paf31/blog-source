@@ -277,6 +277,6 @@ It would also be interesting to explore the extension to mutually recursive type
 
 ## References
 
-[1] Package Data.Generic.Diff on Hackage
-[2] Generic type-safe diff and patch for families of datatypes by Eelco Lempsick, 2009
-[3] The Derivative of a Regular Type is its Type of One-Hole Contexts by Conor McBride
+1. Package Data.Generic.Diff on Hackage
+2. Generic type-safe diff and patch for families of datatypes by Eelco Lempsick, 2009
+3. The Derivative of a Regular Type is its Type of One-Hole Contexts by Conor McBride
