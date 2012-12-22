@@ -22,9 +22,9 @@ import Data.Function (on)
 import Data.List (maximumBy)
 ~~~
 
-## Longest Common Subsequences and Largest Common Subsequences
+## Longest Common Subsequences and Largest Common Substructures
 
-The `diff` function can be specified as follows: for lists `xs` and `ys` find the shortest edit sequence taking `xs` to `ys`. An edit sequence is a list of list modifications (removing elements of the first list and inserting elements of the second list). The dual optimization problem is to find the longest common subsequence of the two input lists. If we can solve one problem, then we can solve the other as well.
+The `diff` function can be specified as follows: for lists `xs` and `ys`, find the shortest edit sequence taking `xs` to `ys`. We can reduce the problem to finding the longest common subsequence of `xs` and `ys`: to obtain the least common subsequence, first remove a subset of elements from `xs`, and then to obtain `ys`, insert a subset of elements of `ys` into the least common subsequence.
 
 Ignoring optimization for the time being, let's take this as our starting point. We'll generalize the longest common subsequence to the largest common substructure.
 
@@ -221,7 +221,7 @@ patch old (inserts, deletes) = foldr wrap (unwrap old inserts) deletes where
   unwrap _ (Replace x y:cs) = unwrap x cs
 ~~~
 
-The functions `plugIn` and `childAt` play a key role, since we need to be able to glue structures together and take them apart again based on the content of the changset.
+The functions `plugIn` and `childAt` play a key role, since we need to be able to glue structures together and take them apart again based on the content of the changeset.
 
 We can verify using the examples above (and others) that `diff` and `patch` satisfy the required laws `patch x $ diff x y = y` and `diff x $ patch x p = p`.
 
