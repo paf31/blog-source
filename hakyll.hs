@@ -34,6 +34,7 @@ main = hakyll $ do
     match "posts/*" $ do
         route   $ setExtension ".html"
         compile $ pageCompilerWith defaultParserState writerOptions
+            >>> applyTemplateCompiler "templates/post.html"
             >>> applyTemplateCompiler "templates/default.html"
             >>> relativizeUrlsCompiler
 
