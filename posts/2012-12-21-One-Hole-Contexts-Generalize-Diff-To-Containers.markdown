@@ -134,7 +134,7 @@ data ListF a x = Nil | Cons a x deriving (Show, Eq)
 type List a = Rec (ListF a)
 
 instance Container (ListF a) where
-  data Context (ListF a) x = ListContext a deriving (Show)
+  data Context (ListF a) x = ListContext a deriving (Show, Eq)
   children Nil = []
   children (Cons a x) = [(x, ListContext a)]
   plugIn x (ListContext a) = Cons a x
