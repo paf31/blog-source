@@ -1,0 +1,9 @@
+---
+title: A Typed Markup Language Based On Haskell
+author: Phil Freeman
+date: 2013/05/18
+description: A simple markup language inspired by Haskell, including a type checker and parser.
+tags: Haskell
+---
+
+
