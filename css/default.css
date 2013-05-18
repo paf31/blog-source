@@ -21,7 +21,7 @@ body
 .centered {
     width: 960px;
     margin: 0 auto;
-    margin: 20px;
+    padding: 20px;
 }
     
 #wrapper {
@@ -33,7 +33,6 @@ body
 {
   .centered {
       width: auto;
-      margin: 20px;
   }
 
   #wrapper {
