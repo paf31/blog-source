@@ -231,8 +231,8 @@ main = do
     dirPosts  = dir ++ "\\output\\posts\\"
     dirCss    = dir ++ "\\output\\css\\"
     dirTags   = dir ++ "\\output\\tags\\"
-  copyFile (dir ++ "\\css\\default.css") (dirCss ++ "default.css")
   mapM_ (createDirectoryIfMissing False) [ dirOutput, dirCss, dirPosts, dirTags ]
+  copyFile (dir ++ "\\css\\default.css") (dirCss ++ "default.css")
   posts <- getAllPosts $ dir ++ "\\posts"
   mapM_ (renderPost dirPosts) posts
   let tags = collectTags posts
