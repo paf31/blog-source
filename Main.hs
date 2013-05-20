@@ -68,7 +68,8 @@ mathJaxScript = unlines
   , "    }," 
   , "    tex2jax: {" 
   , "        inlineMath: [['$','$'], ['\\(','\\)']]" 
-  , "    }" ]
+  , "    }"
+  , "});" ]
   
 gaq :: String
 gaq = unlines
@@ -91,31 +92,36 @@ disqus = unlines
   , "    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);"
   , "})();" ]
   
-defaultTemplate :: String -> H.Html -> H.Html
-defaultTemplate title body = H.html $ do
-  H.head $ do
-    H.title $ H.toHtml $ "functorial.com - " ++ title
-    H.link ! A.rel "stylesheet" ! A.type_ "text/css" ! A.href "http://fonts.googleapis.com/css?family=Lato:300,400,700"
-    H.link ! A.rel "stylesheet" ! A.type_ "text/css" ! A.href "/css/default.css"
-    H.meta ! A.name "viewport" ! A.content "width=device-width, initial-scale=1.0"
-    H.script ! A.type_ "text/x-mathjax-config" $ preEscapedToHtml mathJaxScript  
-    H.script ! A.type_ "text/javascript" ! A.src "http://cdn.mathjax.org/mathjax/latest/MathJax.js" $ mempty
-    H.script ! A.type_ "text/javascript" $ preEscapedToHtml gaq
-  H.body $ do
-     H.div ! A.id "header" $ do
-         H.div ! A.class_ "centered" $ do
-             H.h1 $ H.a ! A.href "/index.html" ! A.style "text-decoration: none; color: white;" $ "functorial"
-             H.p "Type Theory and Programming Languages Blog"
-         H.div ! A.id "splitter" $ mempty
-     H.div ! A.class_ "centered" $ do
-         H.div ! A.id "navigation" $ do
-             H.a ! A.href "/index.html" $ "Home"
-             nbsp
-             H.a ! A.href "/feed.xml" $ "RSS Feed"
-         body
+defaultTemplate :: String -> Bool -> H.Html -> H.Html
+defaultTemplate title useMathJax body = do
+  H.docType 
+  H.html $ do
+    H.head $ do
+      H.title $ H.toHtml $ "functorial.com - " ++ title
+      H.link ! A.rel "stylesheet" ! A.type_ "text/css" ! A.href "http://fonts.googleapis.com/css?family=Lato:300,400,700"
+      H.link ! A.rel "stylesheet" ! A.type_ "text/css" ! A.href "/css/default.css"
+      H.meta ! A.name "viewport" ! A.content "width=device-width, initial-scale=1.0"
+      if useMathJax 
+      then do
+        H.script ! A.type_ "text/x-mathjax-config" $ preEscapedToHtml mathJaxScript  
+        H.script ! A.type_ "text/javascript" ! A.src "http://cdn.mathjax.org/mathjax/latest/MathJax.js" $ mempty
+      else mempty
+      H.script ! A.type_ "text/javascript" $ preEscapedToHtml gaq
+    H.body $ do
+       H.div ! A.id "header" $ do
+           H.div ! A.class_ "centered" $ do
+               H.h1 $ H.a ! A.href "/index.html" ! A.style "text-decoration: none; color: white;" $ "functorial"
+               H.p "Type Theory and Programming Languages Blog"
+           H.div ! A.id "splitter" $ mempty
+       H.div ! A.class_ "centered" $ do
+           H.div ! A.id "navigation" $ do
+               H.a ! A.href "/index.html" $ "Home"
+               nbsp
+               H.a ! A.href "/feed.xml" $ "RSS Feed"
+           body
   
 markdownToHtml :: String -> IO String
-markdownToHtml = readProcess "pandoc" ["--from=markdown", "--to=html"]
+markdownToHtml = readProcess "pandoc" ["--from=markdown", "--to=html", "--ascii"]
 
 postFilename :: String -> String
 postFilename = (++ ".html") . dropExtension
@@ -127,8 +133,9 @@ renderPost dir post = do
     title = maybe "" id $ lookup "title" (tags post) 
     author = maybe "" id $ lookup "author" (tags post) 
     date = maybe "" id $ lookup "date" (tags post) 
+    useMathJax = isJust $ lookup "math" (tags post) 
     html = renderHtml $ 
-      defaultTemplate title $ do
+      defaultTemplate title useMathJax $ do
         H.h2 $ fromString title
         H.p $ H.small $ fromString $ "by " ++ author ++ " on " ++ date
         H.hr
@@ -167,7 +174,7 @@ renderTag :: FilePath -> (String, [Post]) -> IO ()
 renderTag dir (name, posts) = do
   let 
     html = renderHtml $ 
-      defaultTemplate "functorial" $ do		
+      defaultTemplate "functorial" False $ do		
         H.h2 $ fromString name
         H.ul $ mapM_ renderPostLink posts   
   writeFile (dir ++ name ++ ".html") html
@@ -176,7 +183,7 @@ renderIndex :: FilePath -> [String] -> [Post] -> IO ()
 renderIndex dir ts posts = do
   let 
     html = renderHtml $ 
-      defaultTemplate "functorial" $ do		
+      defaultTemplate "functorial" False $ do		
         H.h2 "Tags"
         flip mapM_ ts $ \tag -> do
           nbsp

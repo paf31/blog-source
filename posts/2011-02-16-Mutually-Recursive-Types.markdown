@@ -4,6 +4,7 @@ author: Phil Freeman
 date: 2011/02/16
 description: Encoding mutually recursive least and greatest fixed points in C#
 tags: CSharp, Recursion
+math: yes
 ---
 
 The methods used in my previous posts (here and here) to encode least and greatest fixed points using universal and existential types can be extended to encode least and greatest fixed points of functors on product categories which correspond to mutually recursive types. Catamorphisms and anamorphisms for these types are mutually recursive functions.
