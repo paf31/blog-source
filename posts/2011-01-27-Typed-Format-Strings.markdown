@@ -1,7 +1,7 @@
 ---
 title: Strongly-Typed Format Strings
 author: Phil Freeman
-date: 2011-01-27
+date: 2011/01/27
 description: A type-safe version of the string.Format method.
 tags: CSharp
 ---
