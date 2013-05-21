@@ -132,6 +132,7 @@ defaultTemplate title rootPrefix useMathJax body = do
     H.head $ do
       H.title $ H.toHtml $ "functorial.com - " ++ title
       H.link ! A.rel "stylesheet" ! A.type_ "text/css" ! A.href "http://fonts.googleapis.com/css?family=Lato:300,400,700"
+      H.link ! A.rel "stylesheet" ! A.type_ "text/css" ! A.href "http://fonts.googleapis.com/css?family=Ubuntu+Mono"
       H.link ! A.rel "stylesheet" ! A.type_ "text/css" ! A.href (fromString $ rootPrefix ++ "css/default.css")
       H.meta ! A.name "viewport" ! A.content "width=device-width, initial-scale=1.0"
       if useMathJax 
