@@ -54,6 +54,39 @@ getAllPosts path = do
       , tags     = fst split
       , content  = intercalate "\n" $ snd split }
   
+markdownToHtml :: String -> IO String
+markdownToHtml = readProcess "pandoc" ["--from=markdown", "--to=html5", "--mathjax"]
+
+postFilename :: String -> String
+postFilename = (++ ".html") . dropExtension
+	
+toRssTime :: String -> String
+toRssTime = toFeedDateString (RSSKind Nothing) . toClockTime . toCal . splitOneOf "/"
+  where
+    toCal [ yyyy, mm, dd ] = CalendarTime 
+      { ctYear      = read yyyy
+      , ctMonth     = toEnum (read mm - 1)
+      , ctDay       = read dd
+      , ctHour      = 0
+      , ctMin       = 0
+      , ctSec       = 0
+      , ctPicosec   = 0
+      , ctWDay      = Monday
+      , ctYDay      = 0
+      , ctTZName    = ""
+      , ctTZ        = 0
+      , ctIsDST     = False
+	  }
+    toCal ss = error $ "Invalid date format: " ++ intercalate "/" ss
+
+collectTags :: [Post] -> [(String, [Post])]
+collectTags posts = 
+  map (id &&& postsFor posts) $ allTags posts
+  where
+  postsFor posts tag = filter (elem tag . tagsFor) posts
+  tagsFor = map (dropWhile isSpace) . filter (not . null) . splitOneOf ",". fromJust . lookup "tags" . tags
+  allTags = sort . nub . concatMap tagsFor
+  
 nbsp :: H.Html
 nbsp = preEscapedToHtml ("&nbsp;" :: String)
   
@@ -67,7 +100,7 @@ mathJaxScript = unlines
   , "        extensions: ['AMSmath.js', 'AMSsymbols.js', 'noErrors.js','noUndefined.js']"
   , "    }," 
   , "    tex2jax: {" 
-  , "        inlineMath: [['$','$'], ['\\(','\\)']]" 
+  , "        inlineMath: [['$','$'], ['\\\\(','\\\\)']]"
   , "    }"
   , "});" ]
   
@@ -92,14 +125,14 @@ disqus = unlines
   , "    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);"
   , "})();" ]
   
-defaultTemplate :: String -> Bool -> H.Html -> H.Html
-defaultTemplate title useMathJax body = do
+defaultTemplate :: String -> String -> Bool -> H.Html -> H.Html
+defaultTemplate title rootPrefix useMathJax body = do
   H.docType 
   H.html $ do
     H.head $ do
       H.title $ H.toHtml $ "functorial.com - " ++ title
       H.link ! A.rel "stylesheet" ! A.type_ "text/css" ! A.href "http://fonts.googleapis.com/css?family=Lato:300,400,700"
-      H.link ! A.rel "stylesheet" ! A.type_ "text/css" ! A.href "/css/default.css"
+      H.link ! A.rel "stylesheet" ! A.type_ "text/css" ! A.href (fromString $ rootPrefix ++ "css/default.css")
       H.meta ! A.name "viewport" ! A.content "width=device-width, initial-scale=1.0"
       if useMathJax 
       then do
@@ -110,21 +143,15 @@ defaultTemplate title useMathJax body = do
     H.body $ do
        H.div ! A.id "header" $ do
            H.div ! A.class_ "centered" $ do
-               H.h1 $ H.a ! A.href "/index.html" ! A.style "text-decoration: none; color: white;" $ "functorial"
+               H.h1 $ H.a ! A.href (fromString $ rootPrefix ++ "index.html") ! A.style "text-decoration: none; color: white;" $ "functorial"
                H.p "Type Theory and Programming Languages Blog"
            H.div ! A.id "splitter" $ mempty
        H.div ! A.class_ "centered" $ do
            H.div ! A.id "navigation" $ do
-               H.a ! A.href "/index.html" $ "Home"
+               H.a ! A.href (fromString $ rootPrefix ++ "index.html") $ "Home"
                nbsp
-               H.a ! A.href "/feed.xml" $ "RSS Feed"
+               H.a ! A.href (fromString $ rootPrefix ++ "feed.xml") $ "RSS Feed"
            body
-  
-markdownToHtml :: String -> IO String
-markdownToHtml = readProcess "pandoc" ["--from=markdown", "--to=html", "--ascii"]
-
-postFilename :: String -> String
-postFilename = (++ ".html") . dropExtension
 
 renderPost :: FilePath -> Post -> IO ()
 renderPost dir post = do
@@ -135,7 +162,7 @@ renderPost dir post = do
     date = maybe "" id $ lookup "date" (tags post) 
     useMathJax = isJust $ lookup "math" (tags post) 
     html = renderHtml $ 
-      defaultTemplate title useMathJax $ do
+      defaultTemplate title "../" useMathJax $ do
         H.h2 $ fromString title
         H.p $ H.small $ fromString $ "by " ++ author ++ " on " ++ date
         H.hr
@@ -150,17 +177,9 @@ renderPost dir post = do
 	  	  "Comments powered by "
 	  	  H.span ! A.class_ "logo-disqus" $ "Disqus"
   writeFile (dir ++ (postFilename $ filename post)) html
-
-collectTags :: [Post] -> [(String, [Post])]
-collectTags posts = 
-  map (id &&& postsFor posts) $ allTags posts
-  where
-  postsFor posts tag = filter (elem tag . tagsFor) posts
-  tagsFor = map (dropWhile isSpace) . filter (not . null) . splitOneOf ",". fromJust . lookup "tags" . tags
-  allTags = sort . nub . concatMap tagsFor
   
-renderPostLink :: Post -> H.Html
-renderPostLink post = 
+renderPostLink :: String -> Post -> H.Html
+renderPostLink rootPrefix post = 
   let
     title = maybe "" id $ lookup "title" (tags post) 
     date = maybe "" id $ lookup "date" (tags post) 
@@ -168,48 +187,31 @@ renderPostLink post =
     H.li $ do
       H.em $ fromString date
       fromString " - "
-      H.a ! A.href (fromString $ "/posts/" ++ (postFilename $ filename post)) $ fromString title
+      H.a ! A.href (fromString $ rootPrefix ++ "posts/" ++ (postFilename $ filename post)) $ fromString title
   
 renderTag :: FilePath -> (String, [Post]) -> IO ()
 renderTag dir (name, posts) = do
   let 
     html = renderHtml $ 
-      defaultTemplate "functorial" False $ do		
+      defaultTemplate "functorial" "../" False $ do		
         H.h2 $ fromString name
-        H.ul $ mapM_ renderPostLink posts   
+        H.ul $ mapM_ (renderPostLink "../") posts   
   writeFile (dir ++ name ++ ".html") html
 	
 renderIndex :: FilePath -> [String] -> [Post] -> IO ()
 renderIndex dir ts posts = do
   let 
     html = renderHtml $ 
-      defaultTemplate "functorial" False $ do		
+      defaultTemplate "functorial" "./" False $ do		
         H.h2 "Tags"
-        flip mapM_ ts $ \tag -> do
-          nbsp
-          H.a ! A.href (fromString $ "/tags/" ++ tag ++ ".html") $ fromString tag
+        H.ul $ flip mapM_ ts $ \tag -> 
+          H.li ! A.style "float: left;" $ do
+            H.a ! A.href (fromString $ "tags/" ++ tag ++ ".html") $ fromString tag
+            nbsp
+        H.div ! A.style "clear: left;" $ mempty
         H.h2 "All Posts"
-        H.ul $ mapM_ renderPostLink posts 
+        H.ul $ mapM_ (renderPostLink "./") posts 
   writeFile (dir ++ "index.html") html
-	
-toRssTime :: String -> String
-toRssTime = toFeedDateString (RSSKind Nothing) . toClockTime . toCal . splitOneOf "/"
-  where
-    toCal [ yyyy, mm, dd ] = CalendarTime 
-      { ctYear      = read yyyy
-      , ctMonth     = toEnum (read mm - 1)
-      , ctDay       = read dd
-      , ctHour      = 0
-      , ctMin       = 0
-      , ctSec       = 0
-      , ctPicosec   = 0
-      , ctWDay      = Monday
-      , ctYDay      = 0
-      , ctTZName    = ""
-      , ctTZ        = 0
-      , ctIsDST     = False
-	  }
-    toCal ss = error $ "Invalid date format: " ++ intercalate "/" ss
 
 renderFeed :: FilePath -> [Post] -> IO ()
 renderFeed dir posts = do
