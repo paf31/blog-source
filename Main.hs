@@ -7,7 +7,7 @@ import Data.String
 import Data.Monoid
 import Data.Maybe
 import Control.Arrow ((***), (&&&))
-import Control.Applicative ((<$>))
+import Control.Applicative ((<$>), (<*>))
 import Data.List (intercalate, isSuffixOf, groupBy, nub, sort)
 import Data.List.Split (splitOn, splitOneOf)
 import System.IO (hPutStr, hClose)
@@ -133,7 +133,7 @@ defaultTemplate title rootPrefix useMathJax body = do
       H.title $ H.toHtml $ "functorial.com - " ++ title
       H.link ! A.rel "stylesheet" ! A.type_ "text/css" ! A.href "http://fonts.googleapis.com/css?family=Lato:300,400,700"
       H.link ! A.rel "stylesheet" ! A.type_ "text/css" ! A.href "http://fonts.googleapis.com/css?family=Ubuntu+Mono"
-      H.link ! A.rel "stylesheet" ! A.type_ "text/css" ! A.href (fromString $ rootPrefix ++ "css/default.css")
+      H.link ! A.rel "stylesheet" ! A.type_ "text/css" ! A.href (fromString $ rootPrefix ++ "assets/default.css")
       H.meta ! A.name "viewport" ! A.content "width=device-width, initial-scale=1.0"
       if useMathJax 
       then do
@@ -237,12 +237,13 @@ main :: IO ()
 main = do 
   dir <- getCurrentDirectory
   let 
-    dirOutput = dir ++ "\\output\\"
-    dirPosts  = dir ++ "\\output\\posts\\"
-    dirCss    = dir ++ "\\output\\css\\"
-    dirTags   = dir ++ "\\output\\tags\\"
-  mapM_ (createDirectoryIfMissing False) [ dirOutput, dirCss, dirPosts, dirTags ]
-  copyFile (dir ++ "\\css\\default.css") (dirCss ++ "default.css")
+    dirOutput  = dir ++ "\\output\\"
+    dirPosts   = dir ++ "\\output\\posts\\"
+    dirTags    = dir ++ "\\output\\tags\\"
+    dirAssets  = dir ++ "\\output\\assets\\"
+  mapM_ (createDirectoryIfMissing False) [ dirOutput, dirAssets, dirPosts, dirTags ]
+  assets <- filter ((||) <$> isSuffixOf ".js" <*> isSuffixOf ".css") <$> getDirectoryContents (dir ++ "\\assets\\")
+  mapM_ (\f -> copyFile (dir ++ "\\assets\\" ++ f) (dirAssets ++ f)) assets
   posts <- getAllPosts $ dir ++ "\\posts"
   mapM_ (renderPost dirPosts) posts
   let tags = collectTags posts

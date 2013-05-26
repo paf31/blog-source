@@ -1,0 +1,26 @@
+.j {
+    position: relative;
+    width: 300px; 
+    height: 300px;
+}
+
+    .j .p {
+        position: absolute;
+        width: 10px;
+        height: 10px;
+        background: black;
+        border-radius: 10px;
+    }
+    
+    .j button {
+        background-color: #a0a0a0;
+        color: white;
+        border: 0;
+        border-radius: 5px;
+        padding: 5px 15px;
+        cursor: pointer;
+    }
+    
+        .j button.pressed {
+            background-color: #d0d0d0;
+        }

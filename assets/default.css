@@ -1,0 +1,97 @@
+body
+{
+    font-family: 'Lato', Helvetica, Sans-Serif;
+    color: #404040;
+    margin: 0;
+}
+    
+#header {
+    margin: 0;
+    background: #202028;
+    box-shadow: 0 0 10px #808080;
+    color: #E0E0E0;
+}
+    
+#splitter {
+    margin: 0;
+    height: 5px;
+    background: #606068;
+}
+    
+.centered {
+    width: 960px;
+    margin: 0 auto;
+    padding: 20px;
+}
+    
+#wrapper {
+    width: 960px;
+    margin: 0 auto;
+}
+
+@media (max-width: 1000px)
+{
+  .centered {
+      width: auto;
+  }
+
+  #wrapper {
+      width: 100%;
+  }
+}
+    
+a {
+    color: #808080;
+}
+    
+p {
+    font-weight: 300;
+}
+
+h1 {
+    font-weight: 700;
+}
+    
+h2, h3 {
+    font-weight: 400;
+}
+
+strong {
+    font-weight: 700;
+}
+    
+ul {
+    list-style-type: none;
+}
+
+
+pre {
+    margin: auto 50px;
+}
+
+code {
+    font-family: 'Ubuntu Mono', Monospace;
+}
+
+blockquote {
+    font-family: 'Ubuntu Mono', Monospace;
+    padding: 0px 10px;
+    margin: 0 50px;
+}
+
+.haskell > .kw {
+    font-weight: bold;
+    color: #000080;
+}
+
+.haskell > .fu {
+    color: #800000;
+}
+
+.haskell > .dt {
+    color: #0000FF;
+}
+
+.haskell > .ot {
+    color: #008000;
+}
