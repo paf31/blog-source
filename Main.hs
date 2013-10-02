@@ -6,13 +6,14 @@ import Data.Char
 import Data.String
 import Data.Monoid
 import Data.Maybe
+import Data.List (intercalate)
 import Control.Arrow ((***), (&&&))
 import Control.Applicative ((<$>), (<*>))
 import Data.List (intercalate, isSuffixOf, groupBy, nub, sort)
 import Data.List.Split (splitOn, splitOneOf)
 import System.IO (hPutStr, hClose)
 import System.IO.Temp (withSystemTempFile)
-import System.FilePath (dropExtension)
+import System.FilePath (pathSeparator, dropExtension)
 import System.Process (readProcess)
 import System.Time
 import System.Directory
@@ -47,7 +48,7 @@ getAllPosts :: FilePath -> IO [Post]
 getAllPosts path = do
   posts <- filter (isSuffixOf ".markdown") <$> getDirectoryContents path
   flip mapM posts $ \filename -> do 
-    content <- readFile $ path ++ "\\" ++ filename
+    content <- readFile $ path ++ pathSeparator : filename
     let split = readTags content
     return $ Post 
       { filename = filename
@@ -237,14 +238,15 @@ main :: IO ()
 main = do 
   dir <- getCurrentDirectory
   let 
-    dirOutput  = dir ++ "\\output\\"
-    dirPosts   = dir ++ "\\output\\posts\\"
-    dirTags    = dir ++ "\\output\\tags\\"
-    dirAssets  = dir ++ "\\output\\assets\\"
+    fromDirs   = (++ [pathSeparator]) . intercalate [pathSeparator]
+    dirOutput  = fromDirs [ dir, "output" ]
+    dirPosts   = fromDirs [ dir, "output", "posts" ]
+    dirTags    = fromDirs [ dir, "output", "tags" ]
+    dirAssets  = fromDirs [ dir, "output", "assets" ]
   mapM_ (createDirectoryIfMissing False) [ dirOutput, dirAssets, dirPosts, dirTags ]
-  assets <- filter ((||) <$> isSuffixOf ".js" <*> isSuffixOf ".css") <$> getDirectoryContents (dir ++ "\\assets\\")
-  mapM_ (\f -> copyFile (dir ++ "\\assets\\" ++ f) (dirAssets ++ f)) assets
-  posts <- getAllPosts $ dir ++ "\\posts"
+  assets <- filter ((||) <$> isSuffixOf ".js" <*> isSuffixOf ".css") <$> getDirectoryContents (fromDirs [ dir, "assets" ])
+  mapM_ (\f -> copyFile (fromDirs [ dir, "assets" ] ++ f) (dirAssets ++ f)) assets
+  posts <- getAllPosts $ fromDirs [ dir, "posts" ]
   mapM_ (renderPost dirPosts) posts
   let tags = collectTags posts
   mapM_ (renderTag dirTags) tags
