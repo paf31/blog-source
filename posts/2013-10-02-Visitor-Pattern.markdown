@@ -14,8 +14,8 @@ I find it much easier to explain the visitor pattern by taking a detour through 
 
 Suppose we want to write a method which calculates payroll for different types of employees. We're given the following business requirement: all employees are of one of two types: 
 
-- Hourly employees
-- Salaried employees
+1. Hourly employees
+1. Salaried employees
 
 One way to model this in an Object Oriented language would be to create an abstract class called `Employee` with three concrete subclasses `HourlyEmployee`, `SalariedEmployee`. `Employee` would be defined as an interface with a method for calculating the employee's monthly pay, and each employee class would be responsible for implementing it.
 
@@ -24,24 +24,24 @@ It might look something like this:
 ~~~
 public interface Employee {
 
-    public abstract int calculatePay();
+    double calculatePay();
 }
 
 public class HourlyEmployee implements Employee {
 
-    public int hourlyRate;
-    public int hoursWorked;
+    public double hourlyRate;
+    public double hoursWorked;
 
-    public int calculatePay() {
+    public double calculatePay() {
         return hoursWorked * hourlyRate;
     }
 }
 
 public class SalariedEmployee implements Employee {
 
-    public int salary;
+    public double salary;
 
-    public int calculatePay() {
+    public double calculatePay() {
         return salary / 12;
     }
 }
@@ -93,7 +93,7 @@ In Haskell, I would define the type of employees as follows:
 
 ~~~{.haskell}
 data Employee 
-  = HourlyEmployee { hourlyRate :: Double, hoursWorked :: Douvle }
+  = HourlyEmployee { hourlyRate :: Double, hoursWorked :: Double }
   | SalariedEmployee { salary :: Double }
 ~~~
 
@@ -113,16 +113,16 @@ Notice how the code is structured: it is expressed as a series of cases, each of
 
 ## Solution Using the Visitor Pattern
 
-If the visitor pattern is just the "OOP-ification of pattern matching", then we should be able to derive it by attempting to translate the previous code into Java.
+If the visitor pattern is just the "OOP-ification of pattern matching", then we should be able to derive it by attempting to translate the previous code into an object oriented language. I'll work in C#.
 
 First, we encapsulate a computation which works by case analysis using an interface:
 
 ~~~
 public interface EmployeeCaseAnalysis<Result> {
 
-    Result matchHourlyEmployee(Double hourlyRate, Double hoursWorked);
+    Result matchHourlyEmployee(double hourlyRate, double hoursWorked);
 	
-	Result matchSalariedEmployee(Double salary);
+	Result matchSalariedEmployee(double salary);
 }
 ~~~
 
@@ -133,13 +133,13 @@ The `Result` type parameter here is used to indicate the type of the result of t
 ~~~
 public interface EmployeeCaseAnalysis {
 
-    void matchHourlyEmployee(Double hourlyRate, Double hoursWorked);
+    void matchHourlyEmployee(double hourlyRate, double hoursWorked);
 	
-	void matchSalariedEmployee(Double salary);
+	void matchSalariedEmployee(double salary);
 }
 ~~~
 
-Now, we define the `Employee` abstract class. What is an `Employee`? Well, given any computation by case analysis, we want to be able to perform it and get a result. Here is the result:
+Now, we define the `Employee` interface. What is an `Employee`? Well, given any computation by case analysis, we want to be able to perform it and get a result. Here is the result:
 
 ~~~
 public interface Employee {
@@ -159,8 +159,8 @@ Let's call these two implementations `HourlyEmployee` and `SalariedEmployee`:
 ~~~
 public class HourlyEmployee implements Employee {
 
-    public int hourlyRate;
-	public int hoursWorked;
+    public double hourlyRate;
+	public double hoursWorked;
 
     public void performCaseAnalysis(EmployeeCaseAnalysis caseAnalysis) {
         caseAnalysis.matchHourlyEmployee(hourlyRate, hoursWorked);
@@ -173,7 +173,7 @@ public class HourlyEmployee implements Employee {
 
 public class SalariedEmployee implements Employee {
 
-    public int salary;
+    public double salary;
 
     public void performCaseAnalysis(EmployeeCaseAnalysis caseAnalysis) {
         caseAnalysis.matchSalariedEmployee(salary);
@@ -184,28 +184,28 @@ public class SalariedEmployee implements Employee {
     }
 }
 
-After some renaming, the code above looks just like code implemented using the visitor pattern. What I have called `EmployeeCaseAnalysis` might be renamed to `EmployeeVisitor`, and the `performCaseAnalysis` methods would most likely be renamed to `visit` or `apply`. Here is the full version after the renamings:
+After some renaming, the code above looks just like code implemented using the visitor pattern. What I have called `EmployeeCaseAnalysis` might be renamed to `EmployeeVisitor`, and the `performCaseAnalysis` methods would most likely be renamed to `accept`. Here is the full version after the renamings:
 
 ~~~
 public interface Employee {
 
-    void visit(EmployeeVisitor visitor);
+    void accept(EmployeeVisitor visitor);
 	
-	Result visit<Result>(EmployeeVisitor<Result> visitor);
+	Result accept<Result>(EmployeeVisitor<Result> visitor);
 }
 
 public interface EmployeeVisitor {
 
-    void visitHourlyEmployee(Double hourlyRate);
+    void visitHourlyEmployee(double hourlyRate);
 	
-	void visitSalariedEmployee(Double salary);
+	void visitSalariedEmployee(double salary);
 }
 
 public interface EmployeeVisitor<Result> {
 
-    Result visitHourlyEmployee(Double hourlyRate);
+    Result visitHourlyEmployee(double hourlyRate);
 	
-	Result visitSalariedEmployee(Double salary);
+	Result visitSalariedEmployee(double salary);
 }
 
 public class HourlyEmployee implements Employee {
@@ -213,11 +213,11 @@ public class HourlyEmployee implements Employee {
     public int hourlyRate;
 	public int hoursWorked;
 
-    public void visit(EmployeeVisitor visitor) {
+    public void accept(EmployeeVisitor visitor) {
         visitor.visitHourlyEmployee(hourlyRate, hoursWorked);
     }
 
-    public Result visit<Result>(EmployeeVisitor<Result> visitor) {
+    public Result accept<Result>(EmployeeVisitor<Result> visitor) {
         return visitor.visitHourlyEmployee(hourlyRate, hoursWorked);
     }
 }
@@ -226,11 +226,11 @@ public class SalariedEmployee implements Employee {
 
     public int salary;
 
-    public void visit(EmployeeVisitor visitor) {
+    public void accept(EmployeeVisitor visitor) {
         visitor.visitSalariedEmployee(salary);
     }
 
-    public Result visit<Result>(EmployeeVisitor<Result> visitor) {
+    public Result accept<Result>(EmployeeVisitor<Result> visitor) {
         return visitor.visitSalariedEmployee(salary);
     }
 }
@@ -253,11 +253,11 @@ It is now possible to implement our original payroll computation as a subclass o
 ~~~
 public class PayrollCalulator implements EmployeeVisitor<Double> {
 
-    Double visitHourlyEmployee(Double hourlyRate, Double hoursWorked) {
+    public double visitHourlyEmployee(double hourlyRate, double hoursWorked) {
 		return hourlyRate * hoursWorked;
 	}
 	
-	Double visitSalariedEmployee(Double salary) {
+	public double visitSalariedEmployee(double salary) {
 		return salary / 12.0;
 	}
 }
@@ -271,12 +271,12 @@ public class VacationCalculator implements EmployeeVisitor<Integer> {
     public int maxVacationHours;
 	public int vacationHoursAccruedPerHourWorked;
 
-    Integer visitHourlyEmployee(Double hourlyRate, Double hoursWorked) {
+    public int visitHourlyEmployee(double hourlyRate, double hoursWorked) {
 		return Math.min(maxVacationHours, 
 		    Math.floor(hoursWorked / vacationHoursAccruedPerHourWorked));
 	}
 	
-	Integer visitSalariedEmployee(Double salary) {
+	public int visitSalariedEmployee(double salary) {
 		return maxVacationHours;
 	}
 }
@@ -288,7 +288,7 @@ That is the essence of the visitor pattern. We can summarise what we did in a nu
 
 Suppose we'd like to perform case analysis on our new data type `Foo`:
 
-1. Add an interface caled `FooVisitor`.
+1. Add an interface called `FooVisitor`.
 1. Add a void interface method to `FooVisitor` for each possible case in a case analysis, whose method arguments provide the additional data which is available in that case.
 1. Optionally repeat steps 1 and 2 for a generic interface `FooVisitor<Result>`, in which all interface methods return a result of type `Result`.
 1. Add an interface called `Foo`.
@@ -340,10 +340,10 @@ and that this isomorphism captures the idea behind the visitor pattern at the ty
  
 ## Extending the Visitor Pattern
 
-The idea behind the visitor pattern can be combined with other features of languages like Java and C# to create new patterns and enable new forms of abstraction. Here are some ideas:
+The idea behind the visitor pattern can be combined with other features of languages like C# to create new patterns and enable new forms of abstraction. Here are some ideas:
 
-- Use generic functions to emulate *existential types*.
-- Use generic type parameters to emulate *generalized algebraic data types*.
+1. Use generic functions to emulate *existential types*.
+1. Use generic type parameters to emulate *generalized algebraic data types*.
 
 I will leave these as extended exercises for the interested reader, but details can be found in some of my previous posts.
 
