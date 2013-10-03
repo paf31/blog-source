@@ -21,7 +21,7 @@ One way to model this in an Object Oriented language would be to create an abstr
 
 It might look something like this:
 
-~~~{.java}
+~~~
 public interface Employee {
 
     public abstract int calculatePay();
@@ -69,7 +69,7 @@ When deciding if subclass inheritance is the correct solution for a problem, as 
 
 One anti-pattern which I sometimes see is to solve this problem by using reflection. In C#, the proposed solution might look something like this:
 
-~~~{.java}
+~~~
 public int computeVacationHours(Employee employee) {
 	if (employee is HourlyEmployee) {
 		HourlyExployee hourlyEmployee = (HourlyEmployee) employee;
@@ -117,7 +117,7 @@ If the visitor pattern is just the "OOP-ification of pattern matching", then we 
 
 First, we encapsulate a computation which works by case analysis using an interface:
 
-~~~{.java}
+~~~
 public interface EmployeeCaseAnalysis<Result> {
 
     Result matchHourlyEmployee(Double hourlyRate, Double hoursWorked);
@@ -130,7 +130,7 @@ An implementation of EmployeeCaseAnalysis<Result> needs to provide two methods: 
 
 The `Result` type parameter here is used to indicate the type of the result of the computation. More commonly, you will see a version of this class with no type parameter, which would be used when simply performing an action on the data, not transforming it.
 
-~~~{.java}
+~~~
 public interface EmployeeCaseAnalysis {
 
     void matchHourlyEmployee(Double hourlyRate, Double hoursWorked);
@@ -141,7 +141,7 @@ public interface EmployeeCaseAnalysis {
 
 Now, we define the `Employee` abstract class. What is an `Employee`? Well, given any computation by case analysis, we want to be able to perform it and get a result. Here is the result:
 
-~~~{.java}
+~~~
 public interface Employee {
 
     void performCaseAnalysis(EmployeeCaseAnalysis caseAnalysis);
@@ -156,7 +156,7 @@ In fact, there are only two sensible ways to implement this specification: we ca
 
 Let's call these two implementations `HourlyEmployee` and `SalariedEmployee`:
 
-~~~{.java}
+~~~
 public class HourlyEmployee implements Employee {
 
     public int hourlyRate;
@@ -186,7 +186,7 @@ public class SalariedEmployee implements Employee {
 
 After some renaming, the code above looks just like code implemented using the visitor pattern. What I have called `EmployeeCaseAnalysis` might be renamed to `EmployeeVisitor`, and the `performCaseAnalysis` methods would most likely be renamed to `visit` or `apply`. Here is the full version after the renamings:
 
-~~~{.java}
+~~~
 public interface Employee {
 
     void visit(EmployeeVisitor visitor);
@@ -237,7 +237,7 @@ public class SalariedEmployee implements Employee {
 
 It is also common to pass along the entire subclass of `Employee` to the `visitX` methods in `EmployeeVisitor`.
 
-~~~{.java}
+~~~
 public interface EmployeeVisitor {
 
     void visitHourlyEmployee(HourlyEmployee employee);
@@ -250,7 +250,7 @@ But I will skip that here.
 
 It is now possible to implement our original payroll computation as a subclass of `EmployeeVisitor`:
 
-~~~{.java}
+~~~
 public class PayrollCalulator implements EmployeeVisitor<Double> {
 
     Double visitHourlyEmployee(Double hourlyRate, Double hoursWorked) {
@@ -265,7 +265,7 @@ public class PayrollCalulator implements EmployeeVisitor<Double> {
 
 However, now our coworker can implement the computation of the number of vacation hours without modifying the original code!
 
-~~~{.java}
+~~~
 public class VacationCalculator implements EmployeeVisitor<Integer> {
    
     public int maxVacationHours;
