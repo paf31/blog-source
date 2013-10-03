@@ -302,41 +302,42 @@ It's a lot of boilerplate (which can be automated), but which gives us the flexi
 
 You may wish to skip this section as it is not really necessary for understanding the visitor pattern, but I have included it since it may be helpful.
 
-Suppose for the time being that I have a data type which supports case analysis with only two cases, as in the `Employee` example. The following argument works with any number of cases, but this assumption will simplify what follows. Let's call the data type `Foo`, and the two cases `FooA` and `FooB`.
-
-In Haskell, we could define `Foo` using a type-synonym: `type Foo = Either FooA FooB`.
-
-`Either` is what is known as a "sum type", because it is analogous at a type level to a sum in algebra. It is defined as follows:
+A simple example of a type which supports case analysis in Haskell is the `Either` data type, defined as follows:
 
 ~~~{.haskell}
 data Either a b = Left a | Right b
 ~~~
-	
-That is, a value of type `Either a b` is *either* constructed using `Left`, in which case it contains a value of type `a`, or with `Right`, in which case it contains a value of type `b`. A value of type `Either a b` contains *either* an `a` or a `b`, but not both.
 
-Now, consider a function which takes a value of type `Foo` and returns something of type `result`. Let's call such a thing an `FooFunction result`:
+`Either` is what is known as a "sum type", because it corresponds to addition at the type level.
+	
+A value of type `Either a b` is *either* constructed using `Left`, in which case it contains a value of type `a`, or with `Right`, in which case it contains a value of type `b`. A value of type `Either a b` contains *either* an `a` or a `b`, but not both.
+
+We cannot immediately define the type `Either` in C#, since its type system doesn't support sum types. However, `Either` is isomorphic to a data type which is constructed only using functions, rank-2 polymorphism and records, both of which are available in C#, so it is possible to emulate `Either` in C# using those features.
+
+Define the following data types
 
 ~~~{.haskell}
-type FooFunction result = Foo -> result
-~~~~
+data EitherVisitor a b result = EitherVisitor { visitLeft :: a -> result, visitRight :: b -> result }
 
-Now `Foo` is defined by a type synonym, which we can expand. I'll write in pseudo-Haskell here, and the symbol `~` will be used to indicate that two types are *isomorphic*, i.e. that they contain the same values in a possibly different representation.
+data Either' a b = Either' { acceptVisitor :: forall result. EitherVisitor a b result -> result }
+~~~
 
-    FooFunction result ~ Either FooA FooB -> result
-	
-We can now use the fact that the function type `Either a b -> result` is isomorphic to a pair of functions `(a -> result, b -> result)`. This can be witnessed by writing out the isomorphism explicitly in Haskell, but should be somewhat obvious: if we want a `result` given only an `Either a b`, and we don't know whether we have a `Left` or a `Right`, then we need to be able to handle both cases, so we need two functions, one which returns a `result` given an `a`, and one which returns a result given a `b`.
+This code requires the `PolymorphicComponents` GHC extension.
 
-    FooFunction result ~ (FooA -> result, FooB -> result)
-	
-To aid understanding, I will represent the pair of functions as a record, giving the two functions useful names:
+The isomorphism between `Either` and `Either'` can be witnessed by two functions:
 
-    FooFunction result ~ { visitFooA :: FooA -> result, visitFooB :: FooB -> result }
-	
-Now consider the following type: `forall result. FooFunction result -> result`. I claim that this type is isomorphic to the original type `Foo`, but I will omit a proof. Given that, you should be convinced that
+~~~{.haskell}
+forward :: Either a b -> Either' a b
+forward (Left a) = Either' $ flip visitLeft a
+forward (Right a) = Either' $ flip visitRight a
 
-    Foo ~ forall result. { visitFooA :: FooA -> result, visitFooB :: FooB -> result } -> result
-	
-and that this isomorphism captures the idea behind the visitor pattern at the type level.
+back :: Either' a b -> Either a b
+back = acceptVisitor (EitherVisitor Left Right)
+~~~
+
+One can verify that these functions are indeed inverse to one another.
+
+It is this isomorphism that ensures that the visitor pattern is a sound embedding of sum types into C# using only functions, generics and records. Since the types are isomorphic, we can be sure (assuming we don't do anything too subversive) that the typechecker will verify totality in our case analyses.
  
 ## Extending the Visitor Pattern
 
