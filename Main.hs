@@ -46,7 +46,7 @@ readTags = readTags' False [] . splitOneOf "\n\r" where
 
 getAllPosts :: FilePath -> IO [Post]
 getAllPosts path = do
-  posts <- filter (isSuffixOf ".markdown") <$> getDirectoryContents path
+  posts <- reverse . sort . filter (isSuffixOf ".markdown") <$> getDirectoryContents path
   flip mapM posts $ \filename -> do 
     content <- readFile $ path ++ pathSeparator : filename
     let split = readTags content
