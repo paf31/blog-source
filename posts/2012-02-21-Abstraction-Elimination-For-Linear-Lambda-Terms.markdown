@@ -14,7 +14,7 @@ Last time, I wrote a little bit about encoding linear lambda terms in Haskell us
 module Elim where
 ~~~
 
-I covered abstraction elimination once before when I wrote about adding lambdas to the Purity compiler. Abstraction elimination is the process by which lambda expressions are converted into pointfree expressions. In the simply typed lambda calculus, abstraction elimination uses the basis `{S, K, I}`. However, in the linear case the combinators `S` and `K` cannot be expressed as we saw last time. This time, we will see that the combinators `B`, `C` and `I` form a basis for the linear terms.
+Abstraction elimination is the process by which lambda expressions are converted into pointfree expressions. In the simply typed lambda calculus, abstraction elimination uses the basis `{S, K, I}`. However, in the linear case the combinators `S` and `K` cannot be expressed as we saw last time. This time, we will see that the combinators `B`, `C` and `I` form a basis for the linear terms.
 
 The typical abstraction elimination algorithm basically replaces applications with the combinator `S`, and variables with the combinator `I`. The `K` combinator is used in the case when a variable does not appear in a subexpression, but in the linear case this will never occur. The application case is split into two smaller cases: while eliminating a variable `x` at an application, `x` can appear on the left of the application or on the right, but not in both.
 
