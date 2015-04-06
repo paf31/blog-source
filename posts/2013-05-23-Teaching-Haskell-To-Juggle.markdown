@@ -6,8 +6,10 @@ description:
 tags: Haskell
 ---
 
-<link rel="stylesheet" href="../assets/juggling.css" type="text/css" />
+<link rel="stylesheet" href="../assets/juggling.css" type="text/css"></link>
+
 <script src="../assets/jquery.min.js" type="text/javascript"></script>
+
 <script src="../assets/juggling.min.js" type="text/javascript"></script>
 
 While recently learning some new juggling tricks, I decided to write a few Haskell functions to find valid patterns.
@@ -20,8 +22,10 @@ For example, the siteswap pattern `33` represents the three ball cascade. We can
 
 The siteswap pattern `441` represents a 3-ball pattern which can be inserted as a trick into the regular 3-ball cascade. The notation indicates that the trick consists of a self-throw from each hand to height 4 on beats 1 and 2, followed by the first hand throwing a ball quickly to the second hand on beat 3.
 
-<div class="j" data-j="[4,4,1]" style="float: left;"></div>
-<div class="j" data-j="[3,3,3,3,3,3,4,4,1]" style="float: left;"></div>
+<div class="j" j="[4,4,1]" style="float: left;"></div>
+
+<div class="j" j="[3,3,3,3,3,3,4,4,1]" style="float: left;"></div>
+
 <div style="clear: left;"></div>
 
 The 3-ball pattern `441` (left), and the same pattern inserted into the 3-ball cascade (right).

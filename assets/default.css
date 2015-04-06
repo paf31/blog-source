@@ -1,97 +1,29 @@
-body
-{
-    font-family: 'Lato', Helvetica, Sans-Serif;
-    color: #404040;
+body {
+    background-color: #F7FDFF;  
+    font-family: 'Roboto'; 
+    color: #59656E;
     margin: 0;
-}
-    
-#header {
-    margin: 0;
-    background: #202028;
-    box-shadow: 0 0 10px #808080;
-    color: #E0E0E0;
-}
-    
-#splitter {
-    margin: 0;
-    height: 5px;
-    background: #606068;
-}
-    
-.centered {
-    width: 960px;
-    margin: 0 auto;
-    padding: 20px;
-}
-    
-#wrapper {
-    width: 960px;
-    margin: 0 auto;
 }
 
-@media (max-width: 1000px)
-{
-  .centered {
-      width: auto;
-  }
-
-  #wrapper {
-      width: 100%;
-  }
-}
-    
-a {
-    color: #808080;
-}
-    
-p {
-    font-weight: 300;
+body > * {
+    padding: 10px;
 }
 
 h1 {
-    font-weight: 700;
+    text-shadow: 3px 3px 10px rgba(0, 0, 0, 0.2);
+    font-family: 'Roboto Slab';
 }
-    
+
 h2, h3 {
-    font-weight: 400;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2);
+    font-family: 'Roboto Condensed';
 }
 
-strong {
-    font-weight: 700;
-}
-    
-ul {
-    list-style-type: none;
+.container {
+    padding: 25px 0;
 }
 
-
-pre {
-    margin: auto 50px;
-}
-
-code {
-    font-family: 'Ubuntu Mono', Monospace;
-}
-
-blockquote {
-    font-family: 'Ubuntu Mono', Monospace;
-    padding: 0px 10px;
-    margin: 0 50px;
-}
-
-.haskell > .kw {
-    font-weight: bold;
-    color: #000080;
-}
-
-.haskell > .fu {
-    color: #800000;
-}
-
-.haskell > .dt {
-    color: #0000FF;
-}
-
-.haskell > .ot {
-    color: #008000;
+.dark {
+    background-color: rgba(0, 0, 0, 0.05);
+    box-shadow: 0 5px 5px rgba(0, 0, 0, 0.1);
 }

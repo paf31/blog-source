@@ -8,7 +8,7 @@ tags: Haskell, Testing
 
 Consider this common technical interview question:
 
-    Given a stream of bytes whose length is unknown, select a random byte from the stream using O(1) memory.
+> Given a stream of bytes whose length is unknown, select a random byte from the stream using constant memory.
 
 I chose this example because it is a non-trivial example of a problem involving random number generation.
 
