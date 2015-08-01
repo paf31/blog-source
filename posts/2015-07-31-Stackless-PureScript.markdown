@@ -67,9 +67,9 @@ has been used to construct several useful libraries.
 
 However, in [2], when discussing the extension to a monad transformer, it is correctly observed that:
 
-    In the present implementation in Scala, it's necessary to forego the parameterization on an additional monad, in order to
-    preserve tail call elimination. Instead of being written as a monad transformer itself, Free could be transformed by a monad 
-    transformer for the same effect.
+> In the present implementation in Scala, it's necessary to forego the parameterization on an additional monad, in order to
+> preserve tail call elimination. Instead of being written as a monad transformer itself, Free could be transformed by a monad 
+> transformer for the same effect.
 
 That is, it's not clear how to extend the `Gosub` trick to the free monad _transformer_ if we want to be able to transform an arbitrary monad.
 
