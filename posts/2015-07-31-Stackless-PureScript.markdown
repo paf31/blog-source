@@ -73,11 +73,11 @@ However, in [2], when discussing the extension to a monad transformer, it is cor
 
 That is, it's not clear how to extend the `Gosub` trick to the free monad _transformer_ if we want to be able to transform an arbitrary monad.
 
-Additionally, the approach of putting a monad transformer _outside_ free is not as useful as we'd like if we want to be able to use free monad
+Additionally, the approach of putting a monad transformer _outside_ `Free` is not as useful as we'd like if we want to be able to use free monad
 transformers in PureScript to describe coroutines, since we often want the `Eff` monad at the bottom of the stack, and there is no `EffT`
 transformer!
 
-Fortunately, not all is lost. A neat trick known to the PureScript community saves the day.
+Fortunately, all is not lost. A neat trick known to the PureScript community saves the day.
 
 ## Tail Recursive Monads
 
