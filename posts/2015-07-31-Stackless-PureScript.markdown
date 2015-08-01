@@ -134,12 +134,11 @@ class (Monad m) <= MonadRec m where
 ```
 
 It turns out that this class of "tail recursive monads" is large enough to be useful, including base monads like `Eff` and `Identity`, and
-closed under transformers like `StateT`, `ErrorT`, `WriterT` etc. It is also enough to rescue the implementation `FreeT`!
+closed under transformers like `StateT`, `ErrorT`, `WriterT` etc. It is also enough to rescue the implementation of `FreeT`.
 
 ## Stack-Safe Free Monad Transformers
 
 We can steal the `Gosub` trick from the `Free` monad implementation and apply it to our proposed `FreeT`:
-`FreeT` is named `Co`:
 
 ```haskell
 data GosubF f m b a = GosubF (Unit -> FreeT f m a) (a -> FreeT f m b)
