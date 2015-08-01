@@ -148,8 +148,8 @@ data FreeT f m a
   | Gosub (Exists (GosubF f m a))
 ```
 
-The instances for `Monad` and friends generalize nicely from `Free` to `FreeT`, composing binds by nesting `Gosub` constructors.
-The tricky problem is how to _run_ a computation in a free monad computation.
+The instances for `Monad` and friends generalize nicely from `Free` to `FreeT`, composing binds by nesting `Gosub` constructors. This allows
+us to build computations safely using recursion. The difficult problem is how to _run_ a computation once it has been built.
 
 Instead of allowing interpretation in any monad, we only support interpretation in one of our tail recursive monads. We can reduce
 the process of interpreting the computation to a tail recursive function in that monad:
@@ -188,8 +188,9 @@ main = runProcess (producer $$ consumer)
 The `purescript-coroutines` library supports a handful of combinators for connecting producers, consumers and transformers,
 as well as more powerful, generic coroutine machinery taken from [1].
 
-I hope that this library will become the basis of an ecosystem of streaming utility libraries in PureScript. If you're interested in
-contributing, join us on the #purescript Freenode channel to discuss it!
+I hope that this library will become the basis of an ecosystem of streaming utility libraries in PureScript, supporting streaming access
+to resources like the filesystem, databases and web services. If you're interested in contributing, join us on the #purescript Freenode 
+channel to discuss it!
 
 ## References
 
