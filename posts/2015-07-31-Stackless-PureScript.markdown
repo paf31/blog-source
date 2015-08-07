@@ -158,7 +158,7 @@ the process of interpreting the computation to a tail recursive function in that
 runFreeT :: forall f m a. (Functor f, MonadRec m) => (forall a. f a -> m a) -> FreeT f m a -> m a
 ```
 
-See the [implementation of `runFreeT`](https://github.com/paf31/purescript-coroutines/blob/4ca466573c581f487745a3c4ff88c30d63fc6c3a/src/Control/Coroutine.purs#L103) for more details.
+See the [implementation of `runFreeT`](https://github.com/paf31/purescript-freet/blob/cdbaf6ddfcd97eb6816f6854672cc5126d36c603/src/Control/Monad/Free/Trans.purs#L102-L109) for more details.
 
 ## Stackless Coroutines
 
