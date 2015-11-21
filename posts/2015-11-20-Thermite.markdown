@@ -8,7 +8,7 @@ tags: Haskell
 
 ## Introduction
 
-Thermite is a simple layer on top of the `text-react` library which supports the "single state atom" approach, popularized by ClojureScript's [Om](https://github.com/omcljs/om) and the [Elm Architecture](https://github.com/evancz/elm-architecture-tutorial/).
+Thermite is a simple layer on top of the `purescript-react` library which supports the "single state atom" approach, popularized by ClojureScript's [Om](https://github.com/omcljs/om) and the [Elm Architecture](https://github.com/evancz/elm-architecture-tutorial/).
 
 The library has been changing rapidly since the it was created, but the API is finally starting to become stable, so I'd like to write a blog post covering the basics of creating applications with Thermite.
 
@@ -115,7 +115,7 @@ main = do
   ...
 ```
 
-`text-react` defines functions for rendering a component class, or we could use the [foreign function interface](http://purescript.org/learn/ffi) to use our component class from Javascript code. We won't cover those topics here, but the Thermite [example project](https://github.com/paf31/purescript-thermite/tree/master/test) contains an end-to-end application for reference.
+`purescript-react` defines functions for rendering a component class, or we could use the [foreign function interface](http://purescript.org/learn/ffi) to use our component class from Javascript code. We won't cover those topics here, but the Thermite [example project](https://github.com/paf31/purescript-thermite/tree/master/test) contains an end-to-end application for reference.
 
 ## A Task Component
 
