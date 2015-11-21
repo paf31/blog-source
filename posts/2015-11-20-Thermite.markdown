@@ -1,0 +1,308 @@
+---
+title: Building a Task List Application with Thermite
+author: Phil Freeman
+date: 2015/11/20
+description: 
+tags: Haskell
+---
+
+## Introduction
+
+Thermite is a simple layer on top of the `haskell-react` library which supports the "single state atom" approach, popularized by ClojureScript's [Om](https://github.com/omcljs/om) and the [Elm Architecture](https://github.com/evancz/elm-architecture-tutorial/).
+
+The library has been changing rapidly since the it was created, but the API is finally starting to become stable, so I'd like to write a blog post covering the basics of creating applications with Thermite.
+
+## Anatomy of a Thermite App
+
+A Thermite application is defined by its _specification_, which is parameterized by _four_ type arguments:
+
+```haskell
+newtype Spec eff state props action
+```
+
+In Thermite applications, we rely less on component-local state, choosing instead to represent all application state using a single monolithic value. In the `Spec` type, the type of this value is named `state`.
+
+The `action` type describes the _actions_ which we can use inside our components to update the state and invoke external, asynchronous actions.
+
+The `props` type corresponds to the React component props, and is relatively infrequently used. We won't use it here.
+
+Finally, the `eff` argument represents the _effects_ which our component will use. For an introduction to effects in PureScript, see the [article on the PureScript website](http://purescript.org/learn/eff).
+
+We can create a specification for our component by using the `simpleSpec` function:
+
+```haskell
+simpleSpec ::
+  forall eff state props action.
+    PerformAction eff state props action ->
+    Render state props action ->
+    Spec eff state props action
+```
+
+`simpleSpec` takes two arguments: a `PerformAction` function, and a `Render` function. `PerformAction` will be responsible for interpreting actions invoked by the user, and `Render` will render our component as a React virtual DOM tree. The type synonyms are defined like this (eliding unimportant details using type wildcards):
+
+```haskell
+type PerformAction eff state props action 
+  = action -> _ -> state -> (state -> Eff eff Unit) -> Eff eff Unit
+
+type Render state props action 
+  = (action -> EventHandler) -> _ -> state -> _ -> Array ReactElement
+```
+
+`PerformAction` takes the current component state, and an action, and interprets that action. It also has access to a callback of type `state -> Eff eff Unit`, which can be used to _update_ the component state.
+
+`Render` takes the current component state, and an event handler which can be used to invoke an action, and returns an array of virtual DOM trees representing the component.
+
+And that's it! We have enough information to define our first Thermite component.
+
+Let's start simple, by defining a _counter_ component. First we define our state and action types:
+
+```haskell
+import qualified Thermite as T
+
+import qualified React as R
+import qualified React.DOM as R
+import qualified React.DOM.Props as RP
+
+data Action = Increment | Decrement
+
+type State = { counter :: Int }
+```
+
+Our `State` type is a record containing the value of the counter, and the `Action` type defines two actions, `Increment` and `Decrement`.
+
+The `render` function might look like this:
+
+```haskell
+render :: T.Render State _ Action
+render send _ state _ =
+  [ R.p' [ R.text (show state.counter)
+         , R.button [ RP.onClick \_ -> send Increment ]
+                    [ R.text "Increment" ]
+         , R.button [ RP.onClick \_ -> send Decrement ]
+                    [ R.text "Decrement" ]
+         ]
+  ]
+```
+
+The `send` function here is the event handler that can be used to invoke actions. Notice how it gets wired up to the `button` elements.
+
+The `PerformAction` function interprets an action by matching its constructor using pattern matching:
+
+```haskell
+performAction :: T.PerformAction _ State _ Action
+performAction action _ state update = 
+  update { counter: case action of 
+                      Increment -> state.counter + 1 
+                      Decrement -> state.counter - 1
+         }
+```
+
+The `update` function is the callback which allows us to update the state atom. We call the `update` function, providing a new record containing the new counter value.
+
+We can use `simpleSpec` to create our specification from these parts:
+
+```haskell
+spec :: T.Spec _ State _ Action
+spec = T.simpleSpec performAction render
+```
+
+From here, we can use the `createClass` function to turn our specification into a regular React component class by specifying the initial component state:
+
+```haskell
+main = do
+  let initialState = { counter: 0 }
+      component = T.createClass spec initialState
+  ...
+```
+
+`haskell-react` defines functions for rendering a component class, or we could use the [foreign function interface](http://purescript.org/learn/ffi) to use our component class from Javascript code. We won't cover those topics here, but the Thermite [example project](https://github.com/paf31/purescript-thermite/tree/master/test) contains an end-to-end application for reference.
+
+## A Task Component
+
+Let's start to assemble our task list application. Our application will consist of three components:
+
+- A component for a single task, which will display a text box for a task and a button to remove it from the list,
+- A header component containing a button to add a new task,
+- A task list component, which will combine several task components and a single header component.
+
+Let's start with the first and simplest component here - the task component. As before, we start by choosing action and state types for our component. In this case, these types are very simple:
+
+```haskell
+data TaskAction
+  = EditText String
+  | RemoveTask
+
+type TaskState = { text :: String }
+```
+
+We have two actions - `EditText`, which will update the text for a task, and `RemoveTask`, which will remove it from the list.
+
+Now let's implement our `PerformAction` function to interpret these actions:
+
+```haskell
+performAction :: T.PerformAction _ TaskState _ TaskAction
+performAction (EditText text) _ _ update = update { text: text }
+performAction _ _ _ _ = pure unit
+```
+
+The interpretation of `EditText` is straightforward, but `RemoveTask` is missing. Instead, the `RemoveTask` falls through the first case to the catch-all case which performs no action.
+
+This is because the task component does not understand how to remove itself from a list of tasks - there is no list yet! As we'll see, the _parent_ component will be responsible for interpreting the `RemoveTask` action instead.
+
+Now let's implement the `Render` function. It is also straightforward:
+
+```haskell
+render :: T.Render TaskState _ TaskAction
+render send _ s _ =
+  [ R.p' [ R.input [ RP.value s.text
+                   , RP.onChange \e -> send (EditText (unsafeEventValue e))
+                   ] []
+         , R.button [ RP.onClick \_ -> send RemoveTask ] [ R.text "✖" ]
+         ]
+  ]
+```
+
+This function looks like our counter component's `render` function. However, here we need to deal with the `onChange` event of the `input` element. The `unsafeEventValue` helper function is used to extract the new text from the form event:
+
+```haskell
+unsafeEventValue :: forall event. event -> String
+unsafeEventValue e = (unsafeCoerce e).target.value
+```
+
+Thermite does not provide any tools for dealing with DOM events, hence the call to `unsafeCoerce` here. Other libraries may provide safer, alternative approaches.
+
+At this point, we could call `createClass` to create a React component class for a single task. However, we are instead going to _compose_ our task component with another component to build our application.
+
+## A Header Component
+
+We are going to compose our task component with a header component to build our task list application. We will use the same action and state types for the header as for the full application component:
+
+```haskell
+data TaskListAction
+  = NewTask
+  | TaskAction Int TaskAction
+  
+type TaskListState = { tasks :: L.List TaskState }
+```
+
+The action type identifies two classes of action: the `NewTask` action, which creates a new task, and the `TaskAction` action constructor, which identifies any `TaskAction` as an action in the full `TaskListAction` type. A `TaskAction` is also tagged with an `Int`, the index of the task which it originated from.
+
+The state type is simply a record containing a list of task states.
+
+The header component is defined as follows:
+
+```haskell
+header :: T.Spec _ TaskListState _ TaskListAction
+header = T.simpleSpec performAction render
+  where
+  render :: T.Render TaskListState _ TaskListAction
+  render send _ state _ = 
+    [ R.p' [ R.button [ RP.onClick \_ -> send NewTask ] 
+                      [ R.text "New Task" 
+                      ] 
+           ]
+    ]
+
+  performAction :: T.PerformAction _ TaskListState _ TaskListAction
+  performAction NewTask                   _ state update = 
+    update $ state { tasks = L.Cons { text: "" } state.tasks }
+  performAction (TaskAction i RemoveTask) _ state update = 
+    update $ state { tasks = fromMaybe state.tasks (L.deleteAt i state.tasks) }
+  performAction _ _ _ _ = pure unit
+```
+
+The interesting part here is that the `RemoveTask` actions from the child components are handled by the header. This is because the header has access to the full application state, so is able to modify the list at an index.
+
+Now that we have our individual components defined, we can compose them to build our application.
+
+## Lens Primer
+
+In Thermite, components are composed using _lenses_ and _prisms_, defined in the `haskell-profunctor-lenses` library. I will not cover lenses and prisms in detail here, but I will show how to create simple lenses and prisms for use with Thermite.
+
+Intuitively, a _lens_ represents a pair of a getter and a setter for a property of one type inside another, larger type.
+
+We can create a lens using the `lens` function, by passing in an explicit getter and setter. For example, we can create a lens for the `tasks` property on our `TaskListState` record:
+
+```haskell
+_tasks :: LensP TaskListState (L.List TaskState)
+_tasks = lens _.tasks (_ { tasks = _ })
+```
+
+The first type argument identifies the larger type, and the second type argument identifies the type of the property we are interested in.
+
+The definition of the `_tasks` lens uses record wildcards for both the getter and setter, but desugars into this simpler expression:
+
+```haskell
+_tasks = lens (\state -> state.tasks) 
+              (\state tasks -> state { tasks = tasks })
+```
+
+If we can think of lenses as generalized property accessors, then a good intuition for prisms is as generalized data constructors. For example, we can create a prism for the `TaskAction` data constructor using the `prism` function, as follows:
+
+```haskell
+_TaskAction :: PrismP TaskListAction (Tuple Int TaskAction)
+_TaskAction = prism (uncurry TaskAction) \ta ->
+  case ta of
+    TaskAction i a -> Right (Tuple i a)
+    _ -> Left ta
+```
+
+The power of lenses comes from their composability: lenses and prisms are both examples of the more general concept of _optics_, and we can compose different types of optics to reach deeply into our data structures in different ways.
+
+## Composing Components
+
+The two most important combinators for composing components in Thermite are `focus` and `foreach`.
+
+`focus` uses a lens to identify the state type of a subcomponent as a smaller part of the state type of a parent component, and a prism to identify the action type of the parent component as constructible from the action type of the subcomponent. Here is its type:
+
+```haskell
+focus :: forall state1 state2 action1 action2. 
+         LensP state2 state1 -> 
+         PrismP action2 action1 ->
+         Spec _ state1 _ action1 -> 
+         Spec _ state2 _ action2
+```
+
+The `foreach` function allows us to create a specification for a component from a list of subcomponent specifications. Its type is:
+
+```haskell
+foreach :: forall _ _ state action. 
+           (Int -> Spec _ state _ action) -> 
+           Spec _ (L.List state) _ (Tuple Int action)
+```
+
+Note that `foreach` keeps the action type the same, but modifies the state type to accomodate a _list of states_.
+
+_Aside_: These combinators were inspired by the excellent [OpticUI](https://github.com/zrho/purescript-optic-ui) library, which also uses optics for composing components, but in a more general way (the list of subcomponents passed to `foreach` is replaced by a more general _traversal_ of the component's state type).
+
+With these combinators, we can assemble the specification for our application component as follows:
+
+```haskell
+taskList :: T.Spec _ TaskListState _ TaskListAction
+taskList = header <> T.focus _tasks _TaskAction (T.foreach \_ -> taskSpec)
+```
+
+Let's pick apart this definition.
+
+First of all, the `Monoid` instance for `Spec` allows us to compose the `Spec` for the header with the `Spec` we get back from `focus`, by using the `<>` operator. The `Monoid` instance for `Spec` appends virtual DOM trees, one after the other, and composes `PerformAction` functions so that all action handlers get run.
+
+Next, the expression `T.foreach \_ -> taskSpec` turns our task component `Spec` into a specification of type `Spec _ (L.List TaskState) _ (Tuple Int TaskAction)`. Here, the `Int` appearing in the action type is used to apply any `TaskAction`s from a task subcomponent to the correct state value.
+
+Finally, the `focus` operator applies the `_tasks` lens and `_TaskAction` prism, to make the state and action types match the types for the application component.
+
+And that's it! We can now create a React component class for our application and attach it to the DOM.
+
+```haskell
+main :: Eff (dom :: DOM.DOM) Unit
+main = do
+  let component = T.createClass taskList { tasks: L.Nil }
+  ...
+```
+
+[This gist](https://gist.github.com/paf31/bdcb1fb0df19e565ade2) contains the full, working code from this tutorial, and the [Thermite repository](https://github.com/paf31/purescript-thermite) contains a more complete task list application, demonstrating different types of composition.
+
+## Conclusion
+
+Thermite provides a simple way to specify React components using a purely functional approach, separating a component into a rendering function, and an action interpreter.
+
+In addition, we can compose components using lenses and prisms, which allows us to build our application in parts, using reusable pieces. Since lenses and prisms are first-class values, we can pass them as arguments to functions, to enable powerful forms of reusability.
