@@ -217,7 +217,7 @@ Now that we have our individual components defined, we can compose them to build
 
 ## Lens Primer
 
-In Thermite, components are composed using _lenses_ and _prisms_, defined in the `text-profunctor-lenses` library. I will not cover lenses and prisms in detail here, but I will show how to create simple lenses and prisms for use with Thermite.
+In Thermite, components are composed using _lenses_ and _prisms_, defined in the `purescript-profunctor-lenses` library. I will not cover lenses and prisms in detail here, but I will show how to create simple lenses and prisms for use with Thermite.
 
 Intuitively, a _lens_ represents a pair of a getter and a setter for a property of one type inside another, larger type.
 
