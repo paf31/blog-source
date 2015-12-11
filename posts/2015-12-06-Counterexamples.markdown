@@ -187,7 +187,7 @@ class (Applicative m, Bind m) <= Monad m
 Functor forces the type variable of its argument to appear covariantly, so a simple example of a type constructor which is not a Functor is given by:
 
 ```haskell
-data Op a b = Op (a -> b)
+data Op a b = Op (b -> a)
 ```
 
 `Op` can be made into a contravariant functor, described by the `Contravariant` type class, which we will not cover here.
