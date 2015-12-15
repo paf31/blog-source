@@ -192,9 +192,23 @@ data Op a b = Op (b -> a)
 
 `Op` can be made into a contravariant functor, described by the `Contravariant` type class, which we will not cover here.
 
-Another example is given by `Set`, in which the type argument appears covariantly, but where the type class laws fail to hold.
-
 ### A Functor which is not an Apply
+
+There is a functor for any type constructor, given by the Yoneda lemma:
+
+```haskell
+newtype Yoneda f a = Yoneda (forall r. (a -> r) -> f r)
+```
+
+`Yoneda f` is always a `Functor`, but cannot be made into an instance of `Apply` in general, since to implement `<*>`, we would require a function of type:
+
+```haskell
+forall a b r. (forall r. ((a -> b) -> r) -> f r) ->
+              (forall r. (a        -> r) -> f r) ->
+                         (b        -> r) -> f r
+```
+
+### An Apply which is not an Applicative
 
 The constant functor
 
@@ -202,11 +216,7 @@ The constant functor
 data Const k a = Const k
 ```
 
-cannot be made into an instance of `Apply` in general, since `<*>` would require us to combine two values of the unrestricted type `k`.
-
-### An Apply which is not an Applicative
-
-`Const k` can be made into an `Apply` (but not an `Applicative`) whenever `k` is an instance of `Semigroup` (but not `Monoid`).
+can be made into an `Apply` (but not an `Applicative`) whenever `k` is an instance of `Semigroup` (but not `Monoid`).
 
 `NonEmpty` is another example of an `Apply` which is not an `Applicative`.
 
