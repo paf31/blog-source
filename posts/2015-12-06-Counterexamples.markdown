@@ -218,8 +218,6 @@ data Const k a = Const k
 
 can be made into an `Apply` (but not an `Applicative`) whenever `k` is an instance of `Semigroup` (but not `Monoid`).
 
-`NonEmpty` is another example of an `Apply` which is not an `Applicative`.
-
 ### An Applicative which is not a Monad
 
 We have already seen that the validation functor is an example of an `Applicative` which is not a `Monad`, and therefore also an example of an `Apply` which is not a `Bind`.
