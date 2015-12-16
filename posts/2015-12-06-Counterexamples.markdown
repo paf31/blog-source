@@ -345,13 +345,13 @@ class (Semigroupoid a) <= Category a where
 In the same vein, another example is given by
 
 ```haskell
-data Graph a b = Graph (List (Tuple a b))
+newtype Relation a b = Relation (List (Tuple a b))
 ```
 
 in which we choose a selection of pairs of points from the domain and codomain. Again, there is no `Category` instance, since we cannot construct
 
 ```
-id :: forall a b. Graph a b
+id :: forall a. Relation a a
 ```
 
 in general, unless both the domain and codomain are enumerable.
