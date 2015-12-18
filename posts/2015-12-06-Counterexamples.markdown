@@ -6,8 +6,6 @@ description:
 tags: Haskell
 ---
 
-## Introduction
-
 In Haskell and PureScript, we are familiar with certain standard hierarchies of type classes. For example, here are some of the type classes provided by the PureScript core libraries:
 
 - `Semigroup`, `Monoid`
