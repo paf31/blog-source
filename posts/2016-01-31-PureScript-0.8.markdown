@@ -6,7 +6,7 @@ description:
 tags: Haskell
 ---
 
-It has been a very long release cycle, but the 0.8 release of the PureScript compiler is now ready, after about six months of work. Since 0.7, the PureScript compiler and its tools have seen some rather interesting developments, and I'd like to write a little about each of them.
+It has been a very long release cycle, but [the 0.8 release of the PureScript compiler](https://github.com/purescript/purescript/releases/tag/v0.8.0) is now ready, after about six months of work. Since 0.7, the PureScript compiler and its tools have seen some rather interesting developments, and I'd like to write a little about each of them.
 
 ## Google Summer of Code
 
