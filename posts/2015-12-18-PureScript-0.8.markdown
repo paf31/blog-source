@@ -1,12 +1,12 @@
 ---
 title: Announcing PureScript 0.8
 author: Phil Freeman
-date: 2015/12/18
+date: 2016/01/31
 description:
 tags: Haskell
 ---
 
-This week, we created the first candidate for the 0.8 release of the PureScript compiler, after about six months of work. Since 0.7, the PureScript compiler and its tools have seen some rather interesting developments, and I'd like to write a little about each of them.
+It has been a very long release cycle, but the 0.8 release of the PureScript compiler is now ready, after about six months of work. Since 0.7, the PureScript compiler and its tools have seen some rather interesting developments, and I'd like to write a little about each of them.
 
 ## Google Summer of Code
 
@@ -18,10 +18,10 @@ The first GSOC project involved making changes to the PureScript compiler to ale
 
 For example, the following pattern match is incomplete:
 
-```haskell
+```text
 f :: Maybe Int -> Int
 f (Just x) = x
-```
+```text
 
 and the compiler now helpfully gives us two suggestions:
 
@@ -33,14 +33,14 @@ The following additional cases are required to cover all inputs:
 
 Or alternatively, add a Partial constraint to the type of the enclosing value.
 Non-exhaustive patterns for values without a `Partial` constraint will be disallowed in PureScript 0.9.
-```
+```text
 
 We can either choose to handle the missing case, or use the type system to track partiality using the `Partial` type class:
 
-```haskell
+```text
 f :: Partial => Maybe Int -> Int
 f (Just x) = x
-```
+```text
 
 In the second case, it becomes the responsibility of the caller to ensure that any calls are safe.
 
@@ -63,7 +63,7 @@ The 0.7.5.1 release contained two major changes to improve performance:
 - Space leak fixes
 - Parallel builds
 
-First, after a large amount of testing, we identified a large space leak due to the use of the `WriterT` monad transformer. It turns out that even the `Control.Monad.Trans.Writer.Strict` variant is not strict enough to avoid a tower of thunks (per the [documentation](https://hackage.haskell.org/package/transformers-0.4.3.0/docs/Control-Monad-Trans-Writer-Strict.html), _"although the output is built strictly, it is not possible to achieve constant space behaviour with this transformer"_), and in fact it is generally recommended that `WriterT` not be used at all in production code.
+First, after a large amount of testing, we identified a large space leak due to the use of the `WriterT` monad transformer. It turns out that even the `Control.Monad.Trans.Writer.Strict` variant is not strict enough to avoid a tower of thunks (per the [documentation](https://hackage..org/package/transformers-0.4.3.0/docs/Control-Monad-Trans-Writer-Strict.html), _"although the output is built strictly, it is not possible to achieve constant space behaviour with this transformer"_), and in fact it is generally recommended that `WriterT` not be used at all in production code.
 
 The fix was simple enough: since all of our code was only using `WriterT` _indirectly_ via the `MonadWriter` type class, we were able to keep the interface the same but switch in a safe implementation based on `IO`. (This is not quite as trivial as it sounds - implementing `tell` is simple, `listen` and `pass` slightly less so, and ensuring the same semantics when combined with `ExceptT` was slightly tricky...)
 
@@ -108,28 +108,28 @@ PureScript now supports _field puns_ which make it very easy to construct and de
 
 For example, suppose you are reading a JSON object which represents a person:
 
-```haskell
+```text
 read value = do
   name    <- readProp "name" value
   address <- readProp "address" value
   return $ Person { name: name, address: address }
-```
+```text
 
 The last line is quite noisy, and can be shortened using field puns:
 
-```haskell
+```text
 read value = do
   name    <- readProp "name" value
   address <- readProp "address" value
   return $ Person { name, address }
-```
+```text
 
 The same works for binders, allowing us to deconstruct a person record using the same syntax:
 
-```haskell
+```text
 printPerson (Person { name, address }) =
   printName name <> ": " <> printAddress address
-```
+```text
 
 ## Improved error messages
 
@@ -139,10 +139,10 @@ Improvements range from simple changes to the way information is laid out, to in
 
 I urge you to compare the error messages for yourself, but here is a quick example. Given the following incorrect definition:
 
-```haskell
+```text
 f :: forall a. a -> a
 f _ = 0
-```
+```text
 
 the 0.7 compiler would have generated this error message:
 
@@ -154,7 +154,7 @@ Error at Test.purs line 4, column 7 - line 4, column 7:
     1
   does not have type
     a0
-```
+```text
 
 Not terrible, but here is the new version:
 
@@ -179,7 +179,7 @@ in value declaration f
 
 where a0 is a rigid type variable
   bound at line 4, column 1 - line 4, column 7
-```
+```text
 
 The basic problem is clearly identified at the top of the error message, followed by a short explanation of the context in which the error occurred, and descriptions of any type variables appearing in the error.
 
@@ -209,11 +209,17 @@ Editor support in the compiler has improved markedly in version 0.8. There have 
 - The new `--json-errors` flag
 - A new "externs" file format
 
-The `--json-errors` flag can be used to render error messages and warnings as a JSON data structure, making it easier for editors to access line numbers and module names in errors.
+The `--json-errors` flag can be used to render error messages and warnings as a JSON data structure, making it easier for editors to access line numbers and module names in errors. The output of `--json-errors` also includes any suggested text replacements, which makes it much easier for plugins to implement things like automatically minifying import lists, and adding type declarations.
 
 Externs files are generated by the PureScript compiler, and used during incremental compilation. In earlier versions, externs files were actual PureScript modules which used the FFI to make already-compiled modules available to the compiler. However, this approach was slow and involved unnecessary typechecking, so the latest versions of the compiler use a JSON representation for externs, and skip unnecessary steps in compilation when processing these files.
 
 The new JSON representation makes it possible for external tools to read information about PureScript source code. For example, the `psc-ide` tool reads the files and uses the data to enable features like type-lookup and autocomplete in various editors (currently, Emacs and Atom are supported).
+
+## Try PureScript!
+
+The [Try PureScript](https://try.purescript.org/) website has been completely overhauled for the 0.8 release, including a new backend API and the ability to test out any of the PureScript core libraries.
+
+In addition, the new API-based approach has made it easier to deploy similar sites for other libraries, and so far we have deployed [Try Thermite!](https://paf31.github.io/try-thermite/) and [Try Flare!](https://sharkdp.github.io/try-flare/), which allow interactive code editing for two popular PureScript UI libraries. Eventually, I would like to deploy something similar for the Halogen library, as well as the code samples from the PureScript book.
 
 ## Future Work
 
@@ -229,10 +235,10 @@ The motivation for this change is the following: we want to avoid partial functi
 
 In PureScript, it is possible to define custom operators. For example:
 
-```haskell
+```text
 (+*) :: Int -> Int -> Int
 (+*) x y = x * y + y
-```
+```text
 
 However, in version 0.8, this code will generate a warning:
 
@@ -243,28 +249,28 @@ Operator aliases are declared by using a fixity declaration, for example:
   infixl 9 someFunction as +*
   
 Support for value-declared operators will be removed in PureScript 0.9.
-```
+```text
 
 This warning indicates that we should instead define our operator as an _alias_ for a regular (named) function:
 
-```haskell
+```text
 myAdd :: Int -> Int -> Int
 myAdd x y = x * y + y
 
 infixl 9 myAdd as +*
-```
+```text
 
 The motivation for this restriction is an improvement in the quality of generated code. Compare the generated code for a simple application `2 +* 2`:
 
-```javascript
+```text
 $plus$times(2)(2)
-```
+```text
 
 to the generated code using the operator as an alias:
 
-```javascript
+```text
 myAdd(2)(2)
-```
+```text
 
 In the previous version, we were forced to generated a mangled function name for the operator. With operator aliases, we have a nice compromise: we can generate nice names for operators, but still use them with operator syntax in the PureScript source.
 
@@ -282,21 +288,25 @@ Should instead use the form:
   class Monad
 
 The deprecated syntax will be removed in PureScript 0.9.
-```
+```text
 
 In 0.9, this new class import syntax will become the default, and imports will look like this:
 
-```purescript
+```text
 import Prelude ( class Monad
                , bind
                , Unit
                , unit
                )
-```
+```text
 
 Note that empty parentheses are no longer required when importing a type without its data constructors.
 
-In addition, any "open" imports (which do not specify the imported names explicitly, e.g. `import Prelude`) will generate a warning going forward. Explicit imports are recommended instead, although this check can be bypassed using the `import Prelude(..)` wildcard syntax.
+In addition, any "open" imports (which do not specify the imported names explicitly, e.g. `import Prelude`) will generate a warning going forward. Explicit imports are recommended instead.
+
+### Source Maps
+
+A [pull request](https://github.com/purescript/purescript/pull/1693) which will bring _source map support_ is almost ready, and should be merged before release 0.8.1. This means the ability to debug directly on PureScript source code in web browsers which support source maps!
 
 ## Conclusion
 
