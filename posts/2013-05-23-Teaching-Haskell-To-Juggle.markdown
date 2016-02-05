@@ -42,7 +42,7 @@ For example, the 3-ball cascade stays in state 7 = 2^0^ + 2^1^ + 2^2^ = 111~2~. 
 
 We will represent heights, patterns and states as follows:
 
-~~~{.haskell}
+~~~{.text}
 import Data.Bits
 import Data.Maybe
 import Data.List
@@ -60,7 +60,7 @@ We can transition to a new state by throwing a ball to a given height. If the fi
 
 A valid throw is indicated by a return value constructed using `Just`. An invalid throw returns `Nothing`.
 
-~~~{.haskell}
+~~~{.text}
 
 throw :: Height -> State -> Maybe State
 throw (Height 0) (State s) | (s .&. 1) == 0 = 
@@ -72,7 +72,7 @@ throw _ _ = Nothing
   
 We can also use `foldM` to attemt to throw a pattern. The return value will be `Nothing` if any throw was invalid.
 
-~~~{.haskell}
+~~~{.text}
 throwMany :: Pattern -> State -> Maybe State
 throwMany p s0 = foldM (flip throw) s0 (pattern p)
 ~~~
@@ -81,13 +81,13 @@ To find valid patterns, we need to find cycles in the graph of states and throws
 
 A graph can be represented by a list of vertices together with a list of edges:
 
-~~~{.haskell}  
+~~~{.text}  
 type Graph v e = ([v], [(v, v, e)])
 ~~~
 
 Cycles are just paths whose start and end vertices coincide. We can find paths by choosing a start vertex and performing a depth first traversal of the graph, keeping track of the vertices we have already visited:
 
-~~~{.haskell}  
+~~~{.text}  
 paths :: (Eq v) => Graph v e -> [(v, v, [e])]
 paths (vs, es) = 
   [ (v1, v2, p) 
@@ -104,7 +104,7 @@ paths (vs, es) =
 
 Cycles are then given by filtering the list of paths:
 
-~~~{.haskell}  
+~~~{.text}  
 cycles :: (Eq v) => Graph v e -> [(v, [e])]
 cycles (vs, es) = [ (v1, p ++ [e]) 
                   | (v1, v2, p) <- paths (vs, es)
@@ -118,7 +118,7 @@ In order to generate the graph of states and throws, we need to fix a maximum he
 
 The number of 1 bits in a state represents the number of balls in the air:
 
-~~~{.haskell}    
+~~~{.text}    
 countBits :: Int -> Int
 countBits 0 = 0
 countBits 1 = 1
@@ -127,7 +127,7 @@ countBits n = let (d, r) = n `divMod` 2 in countBits d + countBits r
 
 The function `throw` is the transition function which can be used to tell whether or not a throw corresponds to an edge in the graph. Here is a function which generically constructs a graph from such a function:
 
-~~~{.haskell} 
+~~~{.text} 
 generateGraph :: (Eq v) => (e -> v -> Maybe v) -> [v] -> [e] -> Graph v e
 generateGraph transition vs es =
   let edges = [ (v1, v2, e) 
@@ -139,7 +139,7 @@ generateGraph transition vs es =
 
 We can now construct the state transition graph for a number of balls with a maximum throw height by using `generateGraph` with `throw`. We can use `countBits` to construct the set of states given the maximum height `maxHeight`.
 
-~~~{.haskell} 
+~~~{.text} 
 graph :: Height -> Int -> Graph State Height
 graph (Height maxHeight) numBalls = 
   let maxState 	= (1 `shiftL` maxHeight) - 1
@@ -149,7 +149,7 @@ graph (Height maxHeight) numBalls =
 
 Enumerating valid patterns for a number of balls with a maximum throw height is as simple as finding cycles in this graph:
 
-~~~{.haskell} 
+~~~{.text} 
 validPatterns :: Height -> Int -> [(State, [Height])]
 validPatterns maxHeight numBalls = cycles $ graph maxHeight numBalls
 ~~~
@@ -163,7 +163,7 @@ Finally, we can answer this question from earlier in the post: what is the compl
 
 A trick can be inserted into the n-ball cascade whenever its initial and final states equal the steady state 2^n^-1 of the n-ball cascade.
     
-~~~{.haskell} 
+~~~{.text} 
 tricks :: Height -> Int -> [[Height]]
 tricks maxHeight numBalls = 
   map snd 
@@ -183,7 +183,7 @@ I originally wrote this juggling animator in Haskell using the HOpenGL library f
 
 First, we need to define some constants, including the pattern to throw:
 
-~~~{.haskell}
+~~~{.text}
 -- The fraction of time spent holding the ball in the hand
 pauseTime = 0.35
  
@@ -199,7 +199,7 @@ pattern = [5]
 
 A key function is `rotatePattern`, which is used to rotate a list of heights by a number of steps. This is used to shift a pattern after a throw occurs, or to adjust a pattern for each ball being juggled.
 
-~~~{.haskell}
+~~~{.text}
 rotatePattern : Int -> [a] -> [a]
 rotatePattern n xs =
   if | n < length xs -> drop n xs ++ take n xs
@@ -208,7 +208,7 @@ rotatePattern n xs =
 
 Given the current time (in units of beats), we can calculate the height of the current throw, and the coordinates of the current ball by repeatedly rotating the pattern:
 
-~~~{.haskell}
+~~~{.text}
 heightAtTime : [Int] -> Float -> Int
 heightAtTime hs t =
   let h = head hs in
@@ -234,7 +234,7 @@ yAtTime hs t  =
 
 The `x`-coordinate needs to be clipped to the range `0-1`. Reflections occur at integer values of `x`, since the `x` coordinate represents the total displacement along the `x`-axis.
 
-~~~{.haskell}
+~~~{.text}
 clip : Float -> Float
 clip x =
   if | x > 1     -> 1 - clip (x - 1)
@@ -244,7 +244,7 @@ clip x =
 
 We can now compute the position of each ball. I have hard-coded the width and height of the canvas to 300 pixels here, but these could be provided as parameters.
 
-~~~{.haskell}
+~~~{.text}
 project : Float -> Float -> Int -> Int -> (Float, Float)
 project x y h maxHeight = 
   let
@@ -266,7 +266,7 @@ positionOfBallAt heights maxHeight time index =
 
 `positionOfBallAt` gives the position of the ball, and `circle` is used to render it. The `frame` function renders each ball as a circle at its current position:
 
-~~~{.haskell}
+~~~{.text}
 frameFor : [Int] -> Int -> Int -> Int -> Int -> Form
 frameFor heights timePeriod maxHeight millis index =
   let 
@@ -289,7 +289,7 @@ frame heights millis =
 
 `main` simply invokes `frame` to render the current scene once every millisecond (or as fast as possible):
 
-~~~{.haskell}  
+~~~{.text}  
 main : Signal Element
 main = lift (frame pattern . round) (every millisecond)
 ~~~

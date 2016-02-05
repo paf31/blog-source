@@ -16,7 +16,7 @@ One naive solution would be to store all of the bytes in a list in memory, waiti
 
 Let\'s start by defining a `Stream` datatype so that we can encode the problem in terms of finding a function of the correct type:
 
-~~~{.haskell}
+~~~{.text}
 module Random where
 
 import System.Random (Random, randomRIO)
@@ -45,13 +45,13 @@ Here, the monad `m` is used to represent the side effect of waiting for the next
 
 With that, we might aim to find a function of the following type:
 
-~~~{.haskell}
+~~~{.text}
 select' :: NonEmptyStream IO a -> IO a
 ~~~
 
 After a bit of thought, one arrives at the following solution:
 
-~~~{.haskell}
+~~~{.text}
 select' (a, s) = select'' (return a) 1 s where
   select'' :: IO a -> Int -> Stream IO a -> IO a
   select'' a n s = do
@@ -81,14 +81,14 @@ The trick is to replace the `IO` monad with some monad living in a suitable type
 
 Let's replace the call to `randomRIO` with a call to the new function `uniform`:
 
-~~~{.haskell}
+~~~{.text}
 class (Monad r) => MonadRandom r where
   uniform :: (Int, Int) -> r Int
 ~~~
 
 The new typeclass `MonadRandom` has at least one inhabitant that we know of, which is `IO`:
 
-~~~{.haskell}
+~~~{.text}
 instance MonadRandom IO where
   uniform = randomRIO
 ~~~
@@ -97,13 +97,13 @@ Now instead of working with random values, let's identify the values with their 
 
 Introduce the type `Dist a`, of probability distributions with values in type `a`:
 
-~~~{.haskell}
+~~~{.text}
 newtype Dist a = Dist { runDist :: [(Rational, a)] } deriving (Show, Eq)
 ~~~
 
 I've written about `Dist`'s `Monad` instance before, when I wrote about LINQ to Probability Distributions in C#:
 
-~~~{.haskell}
+~~~{.text}
 instance Functor Dist where
   fmap f (Dist xs) = Dist $ fmap (\(p, x) -> (p, f x)) xs
 
@@ -117,7 +117,7 @@ instance Monad Dist where
 
 The function `normalize` appearing the definition of `>>=` ensures that the probabilities in the distribution sum to 1:
 
-~~~{.haskell}
+~~~{.text}
 normalize :: Dist a -> Dist a
 normalize d = Dist $ fmap (\(p, a) -> (p / total, a)) $ runDist d where
   total = sum $ map fst $ runDist d
@@ -125,14 +125,14 @@ normalize d = Dist $ fmap (\(p, a) -> (p / total, a)) $ runDist d where
 
 In fact, `Dist` is also an instance of `MonadRandom`. The `uniform` function just returns a uniform distribution, as one would expect:
 
-~~~{.haskell}
+~~~{.text}
 instance MonadRandom Dist where
   uniform (l, u) = Dist [ (1 % (toInteger $ u - l + 1), i) | i <- [l..u] ]
 ~~~
 
 We can now rewrite the function `select'` in such a way that it works over an arbitrary monad in `MonadRandom`:
 
-~~~{.haskell}
+~~~{.text}
 select :: (Functor m, Monad m, Monad r, MonadRandom r) => NonEmptyStream m a -> m (r a)
 select (a, s) = select' (return a) 1 s where
   select' :: (Functor m, Monad m, Monad r, MonadRandom r) => r a -> Int -> Stream m a -> m (r a)
@@ -157,7 +157,7 @@ The idea is that since `select` is universally quantified in the monad `r`, we c
 
 For example, let's write a property to check that selecting a random value from a `Stream` does not exclude any values:
 
-~~~{.haskell}
+~~~{.text}
 testAllValuesPresent :: (Eq a) => [a] -> Bool
 testAllValuesPresent xs = 
   all (flip elem values) xs where

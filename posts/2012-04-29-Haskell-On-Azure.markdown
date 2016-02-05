@@ -12,7 +12,7 @@ Azure provides storage services (the table, queue and blob storage services) exp
 
 I\'ve chosen to use a combination of the Happstack web server and blaze-html to build a very simple note-taking web application, but it should be possible to switch out the particular web server easily.
 
-~~~{.haskell}
+~~~{.text}
 module Main where
 
 import Data.Maybe
@@ -31,7 +31,7 @@ Let\'s define the account we are going to be using. An account consists of a ser
 
 For now, we\'ll use the development account, so you will need to have the Windows Azure storage emulator running on your development machine.
 
-~~~{.haskell}
+~~~{.text}
 account :: Account
 account = developmentAccount 
 ~~~
@@ -42,7 +42,7 @@ The note-taking appplication will have simple features: there will be multiple "
 
 We need the ability to generate a new key. We would like note IDs to be approximately sorted by insertion date. In order that more recent notes will be displayed first, we will generate a key based on the current time, subtracting the seconds component of the current time from a large value to reverse the order of the generated keys.
 
-~~~{.haskell}
+~~~{.text}
 newId :: IO String
 newId = do
   (TOD seconds picos) <- getClockTime
@@ -55,7 +55,7 @@ A new key is generated, and then the insertEntity IO action is used to add the n
 
 If this is successful, we perform a redirect-and-get to display the newly added note to the user. If the insert is not successful, then we respond with 500 - Internal Server Error.
 
-~~~{.haskell}
+~~~{.text}
 postNote :: ServerPartT IO Response
 postNote = do 
   methodM POST
@@ -78,7 +78,7 @@ postNote = do
 
 To list the recent notes in the selected notebook, we use queryEntities to query the top 10 entities from the notes table, filtering based on the partition key.
 
-~~~{.haskell}
+~~~{.text}
 getNotes :: ServerPartT IO Response
 getNotes = do
   methodM GET
@@ -95,7 +95,7 @@ This demonstrates a very basic query, but the tablestorage package supports more
 
 If the query fails, then we return response code 500. If it is successful, then we return a HTML page built using blaze-html. The is the content of the root function:
 
-~~~{.haskell}
+~~~{.text}
 root :: String -> [Entity] -> H.Html
 root partition notes = H.html $ do
   H.head $ 
@@ -120,7 +120,7 @@ The first part of the page contains a form which will allow the user to post a n
 
 The last part of the page lists the most recent ten notes in the selected notebook (partition key). Each note is rendered using the displayNote function:
 
-~~~{.haskell}
+~~~{.text}
 displayNote :: Entity -> H.Html
 displayNote note = fromMaybe (return ()) $ do
   text <- edmString "text" note
@@ -138,14 +138,14 @@ Here, we use the `edmString` helper function to extract a string-valued column f
 
 Finally, we can create a web application using the `getNotes` and `postNote` routes:
 
-~~~{.haskell}
+~~~{.text}
 routes :: [ServerPartT IO Response]
 routes = [ getNotes, postNote ]
 ~~~
 
 The `main` function performs the setup step of creating the notes table if the table does not already exist. The helper function `createTableIfNecessary` simplifies this check:
 
-~~~{.haskell}
+~~~{.text}
 main :: IO ()
 main = do 
   result <- createTableIfNecessary account "notes"

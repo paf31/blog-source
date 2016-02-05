@@ -8,7 +8,7 @@ tags: Haskell, Recursion
 
 Consider the following recursive function definitions. What do they have in common?
 
-~~~{.haskell}
+~~~{.text}
 -- equals 0 0 = True
 -- equals 0 n = False
 -- equals n 0 = False
@@ -25,19 +25,19 @@ Consider the following recursive function definitions. What do they have in comm
 
 Well, all three functions take two arguments, and each one is defined recursively. Just as we can define (cata/ana)morphisms for arbitrary base functors, we can unify these three functions under a single abstraction which works over a pair of functors.
 
-~~~{.haskell}
+~~~{.text}
 {-# LANGUAGE Rank2Types, DeriveFunctor #-}
 ~~~
 
 Let's define a fixed point type for an arbitrary functor f as follows:
 
-~~~{.haskell}
+~~~{.text}
 newtype Rec f = In { out :: f (Rec f) }
 ~~~
 
 We can define folds and unfolds for a functor f in a uniform way as usual.
 
-~~~{.haskell}
+~~~{.text}
 fold phi = phi . fmap (fold phi) . out
 unfold psi = In . fmap (unfold psi) . psi
 ~~~
@@ -54,7 +54,7 @@ Now, type `x` appears in `(f # g) x` in those places where there is an `a` contr
 
 For example, if we define a base functor for the type of natural numbers:
 
-~~~{.haskell}
+~~~{.text}
 data Nat t = Zero | Succ t deriving (Show, Functor)
 ~~~
 
@@ -94,7 +94,7 @@ This is the type of algebra that we will use to fold a pair of structures in par
 
 Finally, let\'s define the parallel fold function:
 
-~~~{.haskell}
+~~~{.text}
 parFold :: (forall a b. (a -> b -> x) -> f a -> g b -> x) -> Rec f -> Rec g -> x
 parFold phi x y = (phi $ parFold phi) (out x) (out y)
 ~~~
@@ -103,14 +103,14 @@ The definition is quite simple: we unwrap each of the arguments by one level, an
 
 While we\'re at it, let\'s define a parallel unfold function, which is dual to the definition above:
 
-~~~{.haskell}
+~~~{.text}
 parUnfold :: (forall a b. (x -> (a, b)) -> x -> (f a, g b)) -> x -> (Rec f, Rec g)
 parUnfold psi x = let (a, b) = (psi $ parUnfold psi) x in (In a, In b)
 ~~~
 
 Now we can define the `equals` and `unify` functions above as instances of `parFold`:
 
-~~~{.haskell}
+~~~{.text}
 equals = parFold equals' where
   equals' _ Zero Zero = True
   equals' _ Zero _ = False
@@ -127,7 +127,7 @@ unify = parFold unify' where
 
 The third example shows that the two recursive structures do not have to be defined over the same base functor:
 
-~~~{.haskell}
+~~~{.text}
 data List a t = Empty | Cons a t deriving (Show, Functor)
 
 elementAt = parFold elementAt' where

@@ -10,7 +10,7 @@ Text-based diff is of limited usefulness for analysing changes to a large code b
 
 It's pretty easy to write down a version of the `diff` function for, say, binary trees, but less simple to write a function which works generically across multiple data types. As usual, I spent a while thinking about this before realizing the problem had already been solved ([1], [2]). I'm still quite happy with the approach I came up with, and I think it's sufficiently interesting to write about here anyway.
 
-~~~{.haskell}
+~~~{.text}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE FlexibleContexts #-}
@@ -30,7 +30,7 @@ Ignoring optimization for the time being, let's take this as our starting point.
 
 First, let's examine the inductive definition of all subsequences of a list:
 
-~~~{.haskell}
+~~~{.text}
 subsequences :: [a] -> [[a]]
 subsequences [] = [[]]
 subsequences (x:xs) = [ xs'' | xs' <- subsequences xs, xs'' <- [ xs', x:xs' ] ]
@@ -38,13 +38,13 @@ subsequences (x:xs) = [ xs'' | xs' <- subsequences xs, xs'' <- [ xs', x:xs' ] ]
 
 In words: if the input list has no elements, return just the input, otherwise, for each subsequence of the tail, yield two lists: the first including the head of the input, and the second excluding it.
 
-Let's recast that definition in the more generic language of containers: 
+Let's recast that definition in the more generic language of containers:
 
 If the input has no subcontainers, return just the input, otherwise, for each substructure of each subcontainer, yield two substructures: the first including the structure of the input, and the second including only the substructure.
 
 Let's define a type class:
 
-~~~{.haskell}
+~~~{.text}
 newtype Rec f = Rec { runRec :: f (Rec f) }
 
 class Container f where
@@ -60,13 +60,15 @@ The associated data type `Context f` is the type of one-hole contexts of `f` [3]
 
 There are some fairly obvious laws which instances of the `Container` class should satisfy:
 
-    childAt (plugIn a c) c = a
-    plugIn (childAt a c) c = a
-    (childAt a c) `elem` (children a)
+~~~{.text}
+childAt (plugIn a c) c = a
+plugIn (childAt a c) c = a
+(childAt a c) `elem` (children a)
+~~~
 
 Let's define the type of changes for structures of shape `f`:
 
-~~~{.haskell}
+~~~{.text}
 type Step f = Context f (Rec f)
 
 data Change f = Skip (Step f) | Take (Step f) | Replace (Rec f) (Rec f)
@@ -76,7 +78,7 @@ type Path f = [Change f]
 
 and derive some instances:
 
-~~~{.haskell}
+~~~{.text}
 deriving instance (Eq (f (Rec f))) => Eq (Rec f)
 
 deriving instance (Show (f (Rec f))) => Show (Rec f)
@@ -86,13 +88,13 @@ deriving instance (Show (Context f (Rec f)), Show (Rec f)) => Show (Change f)
 
 With that, let's define the generalization of `subsequences`:
 
-~~~{.haskell}
+~~~{.text}
 type InContext f = (Rec f, Path f)
 
 substructures :: (Container f) => Rec f -> [InContext f]
-substructures (Rec x) 
+substructures (Rec x)
   | null $ children x = [(Rec x, [])]
-  | otherwise = 
+  | otherwise =
     [ substructure
     | (x', ctx) <- children x,
       (x'', ctxs) <- substructures x',
@@ -103,7 +105,7 @@ Here, the `plugIn` and `children` methods are used to generalize the inclusion/e
 
 We can now easily find the largest common substructure, and therefore the difference of two structures.
 
-~~~{.haskell}
+~~~{.text}
 type ChangeSet f = (Path f, Path f)
 
 common :: (Container f, Eq (Rec f)) => [InContext f] -> [InContext f] -> [ChangeSet f]
@@ -128,7 +130,7 @@ diff old new = largest $ (common `on` substructures) old new
 
 Let's verify the code on the simple case of lists.
 
-~~~{.haskell}
+~~~{.text}
 data ListF a x = Nil | Cons a x deriving (Show, Eq)
 
 type List a = Rec (ListF a)
@@ -162,7 +164,7 @@ The result is as expected: from the first list we skip the first element and tak
 
 Now here's a more exciting example - the type of untyped lambda terms:
 
-~~~{.haskell}
+~~~{.text}
 data ExprF x = App x x | Abst String x | Var String deriving (Show, Eq)
 
 type Expr a = Rec ExprF
@@ -198,18 +200,18 @@ s = abst "x" $ abst "y" $ abst "z" $ app (app (var "x") (var "z")) (app (var "y"
 And again, we can test in GHCi:
 
     diff s k
-    > ([Take (AbstContext "x"), Take (AbstContext "y"), 
-        Skip (AbstContext "z"), Skip (AppContext (Right (Rec {runRec = App (Rec { runRec = Var "y" }) ... }))), 
+    > ([Take (AbstContext "x"), Take (AbstContext "y"),
+        Skip (AbstContext "z"), Skip (AppContext (Right (Rec {runRec = App (Rec { runRec = Var "y" }) ... }))),
         Skip (AppContext (Right (Rec { runRec = Var "z" })))],
        [Take (AbstContext "x"), Take (AbstContext "y")])
-       
+
 The diff algorithm has identified `k` as the largest common substructure, and the path through `s` which picks out this substructure discards the third abstraction over the variable `z` and the corresponding applications.
 
 ## Applying Patches
 
 We can also define a function `patch` which applies the result of `diff` to a structure:
 
-~~~{.haskell}
+~~~{.text}
 patch :: (Container f, Eq (Rec f)) => Rec f -> ChangeSet f -> Rec f
 patch old (inserts, deletes) = foldr wrap (unwrap old inserts) deletes where
   wrap (Skip _) x = x
@@ -233,13 +235,13 @@ The key observation is that if two substructures are unequal, then two larger st
 
 Here is the optimized version of `diff`, which is observably much faster than the original:
 
-~~~{.haskell}
+~~~{.text}
 diff2 :: (Container f, Eq (Context f (Rec f))) => Rec f -> Rec f -> ChangeSet f
-diff2 old new 
+diff2 old new
   | null $ children $ runRec old = ([], [Replace old new])
   | null $ children $ runRec new = ([Replace old new], [])
   | otherwise = let matches = [ (x', y', ctx1)  
-                              | (x', ctx1) <- children $ runRec old 
+                              | (x', ctx1) <- children $ runRec old
                               , (y', ctx2) <- children $ runRec new
                               , ctx1 == ctx2 ] in
                 if null matches then
@@ -248,7 +250,7 @@ diff2 old new
                             [ let (xs, ys) = diff2 old y' in (xs, Skip ctx:ys)
                             | (y',ctx) <- children $ runRec new ]
                 else
-                  largest [ let (xs, ys) = diff2 x' y' in (Take ctx:xs, Take ctx:ys) 
+                  largest [ let (xs, ys) = diff2 x' y' in (Take ctx:xs, Take ctx:ys)
                           | (x', y', ctx) <- matches ]
 ~~~
 
@@ -256,11 +258,11 @@ Notice that the new constraints only require equality of contexts, not of struct
 
 Compare this implementation with the dynamic programming implementation of the longest common subsequence on lists:
 
-~~~{.haskell}
+~~~{.text}
 diffList :: (Eq a) => [a] -> [a] -> [a]
 diffList [] new = []
 diffList old [] = []
-diffList old@(x:xs) new@(y:ys) 
+diffList old@(x:xs) new@(y:ys)
   | x == y = (x:diffList xs ys)
   | otherwise = maximumBy (compare `on` length) [ diff old ys, diff xs new ]
 ~~~

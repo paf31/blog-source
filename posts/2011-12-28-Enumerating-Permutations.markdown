@@ -8,7 +8,7 @@ tags: Haskell
 
 Consider the following Haskell function which enumerates permutations of a given length:
 
-~~~{.haskell}
+~~~{.text}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE PolyKinds #-}
 
@@ -70,7 +70,7 @@ Now calculate as follows:
 --   { Let xs' = perms (n - 1) !! k) }
 --     so that k = indexOfPerm (n - 1) xs' }
 --   = (j, xs')
--- 
+--
 -- indexOfPerm n xs
 --   { From earlier }
 --   = j * n + k
@@ -111,10 +111,10 @@ Expanding the recursive definition of `insertAt` gives:
 
 Now we can define `extract` as follows:
 
-~~~{.haskell}
+~~~{.text}
 extract x (x':xs) | x == x'    = (0, xs)
                   | otherwise  = (i + 1, x':xs')
-  where (i, xs') = extract x xs 
+  where (i, xs') = extract x xs
 ~~~
 
 One can check that the relation that we are interested in between `insertAt` and `extract` actually holds.
@@ -123,7 +123,7 @@ One can check that the relation that we are interested in between `insertAt` and
 
 We can now combine `perms` and `indexOf` to give a function `nextPerm` which generates the next permutation in the list `perms n`:
 
-~~~{.haskell}
+~~~{.text}
 fact 0 = 1
 fact n = n * fact (n - 1)
 
@@ -176,7 +176,7 @@ The second case is when `j = n - 1`:
 
 Thus we arrive at our final definition of `nextPerm`:
 
-~~~{.haskell}
+~~~{.text}
 nextPerm 0 [] = []
 nextPerm n xs | j == n - 1  = insertAt 0 n (nextPerm (n - 1) xs')
               | otherwise   = insertAt (j + 1) n xs'
@@ -191,7 +191,7 @@ Using the `-XPolyKinds` GHC extension, we can express a type of permutations, in
 
 The following type definition will be lifted to the kind level, generating two constructors `Z :: Nat` and `S :: Nat -> Nat`
 
-~~~{.haskell}
+~~~{.text}
 data Nat = Z | S Nat
 _1 = S Z
 _2 = S $ S Z
@@ -210,7 +210,7 @@ instance Show Nat where
 
 The type `Leq n` of natural numbers less than or equal to `n`. The type is parameterised over the kind `Nat`.
 
-~~~{.haskell}
+~~~{.text}
 data Leq :: Nat -> * where
   LeqZero :: Leq n
   LeqSucc :: Leq n -> Leq (S n)
@@ -218,7 +218,7 @@ data Leq :: Nat -> * where
 
 We can embed numbers less than or equal to `n` into numbers less than or equal to `n + 1` for every `n`:
 
-~~~{.haskell}
+~~~{.text}
 embed :: Leq n -> Leq (S n)
 embed LeqZero = LeqZero
 embed (LeqSucc n) = LeqSucc (embed n)
@@ -226,7 +226,7 @@ embed (LeqSucc n) = LeqSucc (embed n)
 
 We can convert to and from regular integers:
 
-~~~{.haskell}
+~~~{.text}
 leqToInt :: Leq n -> Int
 leqToInt LeqZero = 0
 leqToInt (LeqSucc n) = 1 + leqToInt n
@@ -247,7 +247,7 @@ instance Show (Leq n) where
 
 The type of natural numbers equal to `n`, that is, a singleton type for each natural number:
 
-~~~{.haskell}
+~~~{.text}
 data EqNat :: Nat -> * where
   EqZero :: EqNat Z
   EqSucc :: EqNat n -> EqNat (S n)
@@ -260,7 +260,7 @@ eq4 = EqSucc $ EqSucc $ EqSucc $ EqSucc EqZero
 
 We can convert the sole inhabitant of each singleton type to its natural number representation:
 
-~~~{.haskell}
+~~~{.text}
 eqToInt :: EqNat n -> Int
 eqToInt EqZero = 0
 eqToInt (EqSucc n) = 1 + eqToInt n
@@ -277,7 +277,7 @@ instance Show (EqNat n) where
 
 We will need the following helper method, which returns the value of `n` in the type of numbers less than or equal to `n`:
 
-~~~{.haskell}
+~~~{.text}
 maxLeq :: EqNat n -> Leq n
 maxLeq EqZero = LeqZero
 maxLeq (EqSucc n) = LeqSucc (maxLeq n)
@@ -285,7 +285,7 @@ maxLeq (EqSucc n) = LeqSucc (maxLeq n)
 
 We can turn collect the list of all numbers in `Leq n` recursively:
 
-~~~{.haskell}
+~~~{.text}
 for :: EqNat n -> [Leq n]
 for EqZero = [LeqZero]
 for (EqSucc n) = LeqZero : map LeqSucc (for n)
@@ -293,7 +293,7 @@ for (EqSucc n) = LeqZero : map LeqSucc (for n)
 
 Finally, we define the type of permutations, again parameterised by the kind `Nat` and containing two type constructors: the empty permutation and the permutation obtained by inserting the value `n + 1` into a permutation of the list `[1..n]`:
 
-~~~{.haskell}
+~~~{.text}
 data Perm :: Nat -> * where
   Empty :: Perm Z
   Insert :: Leq n -> Perm n -> Perm (S n)
@@ -303,7 +303,7 @@ showPerm p = "(" ++ concat (intersperse "," (map show (toList p 0))) ++ ")" wher
   toList :: Perm n -> Int -> [Int]
   toList Empty m = []
   toList (Insert n p) m = let (l, r) = splitAt (leqToInt n) (toList p (m + 1)) in l ++ [m] ++ r
-                         
+
 instance Show (Perm n) where
   show = showPerm
 ~~~
@@ -312,7 +312,7 @@ Note now that invalid permutations are no longer inhabitants of the type `Perm n
 
 The rank of a permutation is the size of the set it permutes:
 
-~~~{.haskell}
+~~~{.text}
 rank :: Perm n -> EqNat n
 rank Empty = EqZero
 rank (Insert n p) = EqSucc (rank p)
@@ -320,7 +320,7 @@ rank (Insert n p) = EqSucc (rank p)
 
 The identity permutation is easily defined by recursion:
 
-~~~{.haskell}
+~~~{.text}
 identity :: EqNat n -> Perm n
 identity EqZero = Empty
 identity (EqSucc n) = Insert LeqZero (identity n)
@@ -328,7 +328,7 @@ identity (EqSucc n) = Insert LeqZero (identity n)
 
 The method `perms` translates easily to this new setting:
 
-~~~{.haskell}
+~~~{.text}
 perms1 :: EqNat n -> [Perm n]
 perms1 EqZero = [Empty]
 perms1 (EqSucc n) = [ Insert i xs | xs <- perms1 n, i <- for n ]
@@ -336,7 +336,7 @@ perms1 (EqSucc n) = [ Insert i xs | xs <- perms1 n, i <- for n ]
 
 We can create a permutation from its list representation by repeatedly extracting the highest element:
 
-~~~{.haskell}
+~~~{.text}
 fromList :: EqNat n -> [Int] -> Perm n
 fromList EqZero [] = Empty
 fromList (EqSucc n) xs = Insert (intToLeq i n) (fromList n (map (flip (-) 1) (delete 0 xs)))
@@ -345,7 +345,7 @@ fromList (EqSucc n) xs = Insert (intToLeq i n) (fromList n (map (flip (-) 1) (de
 
 We can also translate the function `indexOfPerm` without difficulty:
 
-~~~{.haskell}
+~~~{.text}
 indexOfPerm1 :: Perm n -> EqNat n -> Int
 indexOfPerm1 Empty EqZero = 0
 indexOfPerm1 (Insert n p) (EqSucc m) = (indexOfPerm1 p m) * (1 + eqToInt m) + leqToInt n
@@ -353,7 +353,7 @@ indexOfPerm1 (Insert n p) (EqSucc m) = (indexOfPerm1 p m) * (1 + eqToInt m) + le
 
 The following function emulates the indexing function `perms r !!`, returning the `n`th permutation in the set of permutations of a given rank:
 
-~~~{.haskell}
+~~~{.text}
 nth :: Int -> EqNat n -> Perm n
 nth 0 EqZero = Empty
 nth m (EqSucc n) = Insert (intToLeq k n) (nth j n)
@@ -362,14 +362,14 @@ nth m (EqSucc n) = Insert (intToLeq k n) (nth j n)
 
 As before, we can combine `nth` with `indexOfPerm1` to step to the next permutation:
 
-~~~{.haskell}
+~~~{.text}
 nextPerm1' :: Perm n -> Perm n
 nextPerm1' p = let r = rank p in nth (indexOfPerm1 p r - 1) r
 ~~~
 
 Finally, we can perform the same fusion as before, and express `nextPerm1` directly without the need for helper functions `nth` and `indexOfPerm1`.
 
-~~~{.haskell}
+~~~{.text}
 nextPerm1 :: Perm n -> Perm n
 nextPerm1 Empty = Empty
 nextPerm1 (Insert LeqZero p) = Insert (maxLeq (rank p)) (nextPerm1 p)
@@ -385,4 +385,3 @@ Note here that we have also removed the dependence on the intermediate type `Int
 That is, `nextPerm1` preserves the rank of its argument.
 
 Compile the source in this post with GHC 7.4 or later.
-

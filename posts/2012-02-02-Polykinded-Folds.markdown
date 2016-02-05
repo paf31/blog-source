@@ -10,7 +10,7 @@ In the following, I will write a polykinded version of the combinators `fold` an
 
 The following will compile in the new GHC 7.4.1 release. We require the following GHC extensions:
 
-~~~{.haskell}
+~~~{.text}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE PolyKinds #-}
 {-# LANGUAGE KindSignatures #-}
@@ -23,14 +23,14 @@ The following will compile in the new GHC 7.4.1 release. We require the followin
 
 The basic `fold` and `unfold` combinators can be written as follows:
 
-~~~{.haskell}
+~~~{.text}
 -- fold phi = phi . fmap (fold phi) . out
 -- unfold psi = in . fmap (unfold psi) . psi
 ~~~
 
 The idea now is to generalize these combinators by working over different categories. We can capture the basic operations in a category with a typeclass:
 
-~~~{.haskell}
+~~~{.text}
 class Category hom where
   ident :: hom a a
   compose :: hom a b -> hom b c -> hom a c
@@ -42,7 +42,7 @@ In earlier versions of GHC, the type hom would have been specialized to kind `* 
 
 Here is the instance for the category Hask of Haskell types. Objects are Haskell types and morphisms are functions between types. The identity is the regular polymorphic identity function `id`, and composition is given by the (flipped) composition operator `(.)`
 
-~~~{.haskell}
+~~~{.text}
 instance Category (->) where
   ident = id
   compose = flip (.)
@@ -50,13 +50,13 @@ instance Category (->) where
 
 Another example is the category of type constructors and natural transformations. A natural transformation is defined as follows:
 
-~~~{.haskell}
+~~~{.text}
 newtype Nat f g = Nat { nu :: (forall a. f a -> g a) } 
 ~~~
 
 Here is the Category instance for natural transformations. This time the type hom is inferred to have kind `(* -> *) -> (* -> *) -> *`. Identity and composition are both defined pointwise.
 
-~~~{.haskell}
+~~~{.text}
 instance Category (Nat :: (* -> *) -> (* -> *) -> *) where
   ident = Nat id
   compose f g = Nat (nu g . nu f)
@@ -64,7 +64,7 @@ instance Category (Nat :: (* -> *) -> (* -> *) -> *) where
 
 Let\'s define a type class which will capture the idea of a fixed point in a category. This generalizes the idea of recursive types in `Hask`:
 
-~~~{.haskell}
+~~~{.text}
 class Rec hom f t where
   _in :: hom (f t) t
   out :: hom t (f t)
@@ -74,7 +74,7 @@ The class `Rec` defines two morphisms: `_in`, which is the constructor of the fi
 
 The final piece is the definition of a higher order functor, which generalizes the typeclass `Functor`:
 
-~~~{.haskell}
+~~~{.text}
 class HFunctor hom f where
   hmap :: hom a b -> hom (f a) (f b)
 ~~~
@@ -83,7 +83,7 @@ Note the similarity with the type signature of the function `fmap :: (Functor f)
 
 Finally, we can define folds and unfolds in a category. The definitions are as before, but with explicit composition, constructors and destructors replaced with the equivalent type class methods, and `hmap` in place of `fmap`:
 
-~~~{.haskell}
+~~~{.text}
 fold :: (Category hom, HFunctor hom f, Rec hom f rec) => hom (f t) t -> hom rec t
 fold phi = compose out (compose (hmap (fold phi)) phi)
 
@@ -97,7 +97,7 @@ Now for some examples.
 
 The first example is a regular recursive datatype of binary leaf trees. The functor `FTree` is the base functor of this recursive type:
 
-~~~{.haskell}
+~~~{.text}
 data FTree a b = FLeaf a | FBranch b b
 
 data Tree a = Leaf a | Branch (Tree a) (Tree a)
@@ -105,7 +105,7 @@ data Tree a = Leaf a | Branch (Tree a) (Tree a)
 
 An instance of `Rec` shows the relationship between the defining functor and the recursive type itself:
 
-~~~{.haskell}
+~~~{.text}
 instance Rec (->) (FTree a) (Tree a) where
   _in (FLeaf a) = Leaf a
   _in (FBranch a b) = Branch a b
@@ -115,7 +115,7 @@ instance Rec (->) (FTree a) (Tree a) where
 
 `FTree` is indeed a functor, so it is also a `HFunctor`:
 
-~~~{.haskell}
+~~~{.text}
 instance HFunctor (->) (FTree a) where
   hmap f (FLeaf a) = FLeaf a
   hmap f (FBranch a b) = FBranch (f a) (f b)
@@ -123,7 +123,7 @@ instance HFunctor (->) (FTree a) where
 
 These instances are enough to define folds and unfolds for this type. The following fold calculates the depth of a tree:
 
-~~~{.haskell}
+~~~{.text}
 depth :: Tree a -> Int
 depth = (fold :: (FTree a Int -> Int) -> Tree a -> Int) phi where
   phi :: FTree a Int -> Int
@@ -137,7 +137,7 @@ The second example is a fold for the nested (or non-regular) datatype of complet
 
 The higher order functor `FCTree` defines the type constructor `CTree` as its fixed point:
 
-~~~{.haskell}
+~~~{.text}
 data FCTree f a = FCLeaf a | FCBranch (f (a, a))
 
 data CTree a = CLeaf a | CBranch (CTree (a, a))
@@ -145,7 +145,7 @@ data CTree a = CLeaf a | CBranch (CTree (a, a))
 
 Again, we define type class instances for HFunctor and Rec:
 
-~~~{.haskell}
+~~~{.text}
 instance HFunctor Nat FCTree where
   hmap (f :: Nat (f :: * -> *) (g :: * -> *)) = Nat ff where
     ff :: forall a. FCTree f a -> FCTree g a
@@ -163,13 +163,13 @@ instance Rec Nat FCTree CTree where
 
 Morphisms between type constructors are natural transformations, so we need a type constructor to act as the target of the fold. For our purposes, a constant functor will do:
 
-~~~{.haskell}
+~~~{.text}
 data K a b = K a
 ~~~
 
 And finally, the following fold calculates the depth of a complete binary leaf tree:
 
-~~~{.haskell}
+~~~{.text}
 cdepth :: CTree a -> Int
 cdepth c = let (K d) = nu (fold (Nat phi)) c in d where
   phi :: FCTree (K Int) a -> K Int a
@@ -183,13 +183,13 @@ The final example is a fold for the pair of mutually recursive datatype of lists
 
 We cannot express type constructors in Haskell whose return kind is anything other than `*`, so we cheat a little and emulate the product kind using an arrow kind `Choice -> *`, where `Choice` is a two point kind, lifted using the `DataKinds` extension:
 
-~~~{.haskell}
+~~~{.text}
 data Choice = Fst | Snd
 ~~~
 
 A morphism of pairs of types is just a pair of morphisms. For technical reasons, we represent this using a Church-style encoding, along with helper methods, as follows:
 
-~~~{.haskell}
+~~~{.text}
 newtype PHom h1 h2 p1 p2 = PHom { runPHom :: forall r. (h1 (p1 Fst) (p2 Fst) -> h2 (p1 Snd) (p2 Snd) -> r) -> r }
 
 mkPHom f g = PHom (\h -> h f g)
@@ -199,7 +199,7 @@ sndPHom p = runPHom p (\f -> \g -> g)
 
 Now, `PHom` allows us to take two categories and form the product category:
 
-~~~{.haskell}
+~~~{.text}
 instance (Category h1, Category h2) => Category (PHom h1 h2) where
   ident = mkPHom ident ident
   compose p1 p2 = mkPHom (compose (fstPHom p1) (fstPHom p2)) (compose (sndPHom p1) (sndPHom p2))
@@ -207,7 +207,7 @@ instance (Category h1, Category h2) => Category (PHom h1 h2) where
 
 We can define the types of lists of even and odd length as follows. Note that the kind annotation indicates the appearance of the kind `Choice -> *`:
 
-~~~{.haskell}
+~~~{.text}
 data FAlt :: * -> (Choice -> *) -> Choice -> * where
   FZero :: FAlt a p Fst
   FSucc1 :: a -> (p Snd) -> FAlt a p Fst
@@ -221,7 +221,7 @@ data Alt :: * -> Choice -> * where
 
 Again, we need to define instances of `Rec` and `HFunctor`:
 
-~~~{.haskell}
+~~~{.text}
 instance Rec (PHom (->) (->)) (FAlt a) (Alt a) where
   _in = mkPHom f g where
     f FZero = Zero
@@ -241,7 +241,7 @@ instance HFunctor (PHom (->) (->)) (FAlt a) where
 
 As before, we create a target type for our fold, and this time a type synonym as well:
 
-~~~{.haskell}
+~~~{.text}
 data K2 :: * -> * -> Choice -> * where
   K21 :: a -> K2 a b Fst
   K22 :: b -> K2 a b Snd
@@ -251,7 +251,7 @@ type PairUpResult a = K2 [(a, a)] (a, [(a, a)])
 
 At last, here is the fold `pairUp`, taking even length lists to lists of pairs:
 
-~~~{.haskell}
+~~~{.text}
 pairUp :: Alt a Fst -> [(a, a)]
 pairUp xs = let (K21 xss) = (fstPHom (fold (mkPHom phi psi))) xs in xss where
   phi FZero = K21 []

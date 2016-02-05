@@ -8,7 +8,7 @@ tags: Haskell, PolyKinds
 
 Last time, I wrote a little bit about encoding linear lambda terms in Haskell using promoted datatypes to represent the set of variables appearing in a term. This time I\'d like to look at an algorithm for abstraction elimination for linear lambda terms.
 
-~~~{.haskell}
+~~~{.text}
 {-# LANGUAGE RankNTypes, DataKinds, GADTs, TypeOperators, FlexibleInstances #-
 
 module Elim where
@@ -32,7 +32,7 @@ Looking at the definitions of the combinators `B` and `C`, we can see how they c
 
 Let's recall the code from last time. I defined a type of context splittings, used to divide up the variables in an application into two subsets:
 
-~~~{.haskell}
+~~~{.text}
 data Splitting v1 v2 s where
   E :: Splitting '[] '[] '[]
   L :: Splitting xs ys s -Splitting (x ': xs) ys (x ': s)
@@ -41,7 +41,7 @@ data Splitting v1 v2 s where
 
 I then defined the following type of linear terms, and a few inhabitants:
 
-~~~{.haskell}
+~~~{.text}
 data Lin vars where
   Var :: v -Lin (v ': '[])
   App :: Splitting vs ws s -Lin vs -Lin ws -Lin s
@@ -58,7 +58,7 @@ Now, we will show that these three terms form a basis for all linear terms. That
 
 We seek a function from the type `Lin` to trees which only mention applications and the three terms `B`, `C` and `I`. Let's define an extended version of the type `Lin`, which adds three constructors for the three combinators:
 
-~~~{.haskell}
+~~~{.text}
 data Lin' vars where
   B :: Lin' '[]
   C :: Lin' '[]
@@ -86,7 +86,7 @@ We can pass in a name for the variable `v` and get back another expression. Para
 
 We need a supply of unique variable names:
 
-~~~{.haskell}
+~~~{.text}
 newtype VarSupply a = VarSupply { runSupply :: Int -> (a, Int) }
 
 instance Monad VarSupply where
@@ -96,14 +96,14 @@ instance Monad VarSupply where
 
 This action generates a new variable name:
 
-~~~{.haskell}
+~~~{.text}
 nextVar :: VarSupply Int
 nextVar = VarSupply (\i -> (i, i + 1))
 ~~~
 
 The final piece before we can implement the elimination function is a helper function used to create context splittings. This function creates trivial splittings with all variables on the right. These will be used to construct applications of the combinators `B` and `C`, which mention no variables at all (and so all variables in the application must occur in the right hand subexpression):
 
-~~~{.haskell}
+~~~{.text}
 trivial :: Lin' vars -> Splitting '[] vars vars
 trivial (Var' _) = R $ E
 trivial (App' s t1 t2) = trivial' s where
@@ -119,14 +119,14 @@ trivial I = E
 
 Now we can define the elimination function:
 
-~~~{.haskell}
+~~~{.text}
 elim :: Lin vars -> Lin' vars
 elim t = fst $ runSupply (elim' $ inj t) 0 where
 ~~~
 
 The helper function `inj` injects values in the type `Lin` into the type `Lin'`:
 
-~~~{.haskell}
+~~~{.text}
   inj :: Lin vars -Lin' vars
   inj (Var v) = Var' v
   inj (App s t1 t2) = App' s (inj t1) (inj t2)
@@ -135,7 +135,7 @@ The helper function `inj` injects values in the type `Lin` into the type `Lin'`:
 
 The `elim` method uses a helper method `elim'` which runs in the `VarSupply` monad to generate new variable names. Every time an abstraction is found, a new variable name is generated, used to create a subexpression, and then eliminated from the subexpression.
 
-~~~{.haskell}
+~~~{.text}
   elim' :: Lin' vars -> VarSupply (Lin' vars)
   elim' (App' s t1 t2) = do
     t1' <- elim' t1
@@ -149,19 +149,19 @@ The `elim` method uses a helper method `elim'` which runs in the `VarSupply` mon
 
 The key function is `elim''` which eliminates a specific variable from a subexpression. Again, `elim''` runs in the `VarSupply` monad.
 
-~~~{.haskell}
+~~~{.text}
   elim'' :: Int -> Lin' (Int ': vars) -> VarSupply (Lin' vars)
 ~~~
 
 A variable can be eliminated using the `I` combinator. Note that it is not necessary to check that names are equal here, because linearity means that if we were to encounter a different variable here, we would have taken a different path at an application further up the expression tree.
 
-~~~{.haskell}
+~~~{.text}
   elim'' name (Var' _) = return I
 ~~~
 
 In the case of an application, our choices are limited by the types of the subexpression. The splitting context tells us how to proceed. If the eliminated variable occurs on the left of the application, we use the combinator `C`. If it occurs on the right, we use the combinator `B`. In either case, we only need to eliminate the variable recursively on one side of the application:
 
-~~~{.haskell}
+~~~{.text}
   elim'' name (App' (L s) t1 t2) = do
     t1' <- elim'' name t1
     return $ App' s (App' (trivial t1') C t1') t2
@@ -172,7 +172,7 @@ In the case of an application, our choices are limited by the types of the subex
 
 In the case of a nested abstraction, we generate a new variable name, and then eliminate both variables in turn:
 
-~~~{.haskell}
+~~~{.text}
   elim'' name (Abs' f) = do
     name' <- nextVar
     tmp <- elim'' name (f name)

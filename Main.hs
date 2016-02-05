@@ -26,7 +26,7 @@ import Cheapskate (markdown, def)
 import Cheapskate.Html (renderDoc)
 import Cheapskate.Types
 
-data Post = Post 
+data Post = Post
   { filename :: String
   , tags     :: [(String, String)]
   , content  :: String
@@ -46,14 +46,14 @@ readTags = readTags' False [] . splitOneOf "\n\r" where
 getAllPosts :: FilePath -> IO [Post]
 getAllPosts path = do
   posts <- reverse . sort . filter (isSuffixOf ".markdown") <$> getDirectoryContents path
-  flip mapM posts $ \filename -> do 
+  flip mapM posts $ \filename -> do
     content <- readFile $ path </> filename
     let split = readTags content
-    return $ Post 
+    return $ Post
       { filename = filename
       , tags     = fst split
       , content  = intercalate "\n" $ snd split }
-  
+
 markdownToHtml :: String -> H.Html
 markdownToHtml = renderDoc . markdown def { allowRawHtml = True, sanitize = False } . fromString
 
@@ -61,27 +61,27 @@ postFilename :: String -> String
 postFilename = (++ ".html") . dropExtension
 
 collectTags :: [Post] -> [(String, [Post])]
-collectTags posts = 
+collectTags posts =
   map (id &&& postsFor posts) $ allTags posts
   where
   postsFor posts tag = filter (elem tag . tagsFor) posts
   tagsFor = map (dropWhile isSpace) . filter (not . null) . splitOneOf ",". fromJust . lookup "tags" . tags
   allTags = sort . nub . concatMap tagsFor
-  
+
 defaultTemplate :: String -> String -> H.Html -> H.Html
 defaultTemplate title rootPrefix body = do
-  H.docType 
+  H.docType
   H.html $ do
     H.head $ do
       H.title $ H.toHtml $ "Functorial Blog - " ++ title
-      H.link ! A.rel "stylesheet" 
-             ! A.type_ "text/css" 
-             ! A.href "http://fonts.googleapis.com/css?family=Roboto+Slab:400,300|Roboto:400,700|Roboto+Condensed:400,700"
-      H.link ! A.rel "stylesheet" 
-             ! A.type_ "text/css" 
+      H.link ! A.rel "stylesheet"
+             ! A.type_ "text/css"
+             ! A.href "http://fonts.googleapis.com/css?family=Roboto+Slab:400,300"
+      H.link ! A.rel "stylesheet"
+             ! A.type_ "text/css"
              ! A.href "http://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css"
-      H.link ! A.rel "stylesheet" 
-             ! A.type_ "text/css" 
+      H.link ! A.rel "stylesheet"
+             ! A.type_ "text/css"
              ! A.href (fromString $ rootPrefix </> "assets" </> "default.css")
       H.link ! A.rel "stylesheet"
              ! A.type_ "text/css"
@@ -90,15 +90,16 @@ defaultTemplate title rootPrefix body = do
       H.script ! A.type_ "text/javascript" ! A.src (fromString $ rootPrefix </> "assets" </> "gaq.js") $ mempty
       H.script ! A.type_ "text/javascript" ! A.src "http://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.7/highlight.min.js" $ mempty
       H.script ! A.type_ "text/javascript" $ fromString "hljs.initHighlightingOnLoad();"
-    H.body $ do
-       H.div ! A.id "container" $ do
-         H.h1 ! A.class_ "text-center" $ fromString "Functorial Blog"
-         H.p ! A.class_ "lead text-center" $ fromString "A blog about functional programming"
-         H.p ! A.class_ "text-center" $ H.a ! A.href (fromString $ rootPrefix </> "index.html") $ fromString "Home"
-       H.section ! A.class_ "dark" $ do
-         H.div ! A.class_ "container" $ body
-       H.div ! A.class_ "container" $ 
-         H.p ! A.class_ "text-center text-muted" $ H.small $ fromString "Copyright Phil Freeman 2010-2015"
+    H.body $
+       H.div ! A.class_ "container" $ do
+         H.section $ do
+           H.h1 $ H.a ! A.href (fromString $ rootPrefix </> "index.html") $ fromString "Functorial Blog"
+           H.p ! A.class_ "lead" $ fromString "A blog about functional programming"
+           H.hr
+         H.section body
+         H.section $ do
+           H.hr
+           H.p ! A.class_ "text-muted" $ H.small $ fromString "Copyright Phil Freeman 2010-2016"
 
 renderPost :: Post -> H.Html
 renderPost Post{..} = do
@@ -109,7 +110,7 @@ renderPost Post{..} = do
     H.h2 $ fromString title
     H.p $ H.small $ fromString $ "by " ++ author ++ " on " ++ date
     markdownToHtml content
-  
+
 renderPostLink :: String -> Post -> H.Html
 renderPostLink rootPrefix Post{..} = do
   let title = maybe "" id $ lookup "title" tags
@@ -118,19 +119,19 @@ renderPostLink rootPrefix Post{..} = do
     H.em $ fromString date
     fromString " - "
     H.a ! A.href (fromString $ rootPrefix </> "posts/" </> postFilename filename) $ fromString title
-	
+
 renderIndex :: [Post] -> H.Html
 renderIndex posts = defaultTemplate "functorial" "./" $ do
   H.h2 "Posts"
-  H.ul $ mapM_ (renderPostLink ".") posts 
-  
-writeHtml :: FilePath -> H.Html -> IO ()  
-writeHtml fp = writeFile fp . renderHtml  
-  
+  H.ul $ mapM_ (renderPostLink ".") posts
+
+writeHtml :: FilePath -> H.Html -> IO ()
+writeHtml fp = writeFile fp . renderHtml
+
 main :: IO ()
-main = do 
+main = do
   dir <- getCurrentDirectory
-  let 
+  let
     dirOutput  = dir </> "output"
     dirPosts   = dir </> "output" </> "posts"
     dirAssets  = dir </> "output" </> "assets"

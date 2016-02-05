@@ -16,7 +16,7 @@ The simplicity of the language below allows for a very simple implementation: ty
 
 With that, let's include some modules:
 
-~~~{.haskell}
+~~~{.text}
 module Markup where
 
 import Text.Parsec
@@ -37,7 +37,7 @@ Language Definition and Examples
 
 I would like separate languages for type declarations and values. Here are some examples of the sorts of things I would like to be able to write (note, not all of these are expected to pass the typechecker):
 
-~~~{.haskell}
+~~~{.text}
 exampleSchema = unlines 
   [ "Nil :: List Z a;"
   , "Singleton :: a -> List (S Z) a;"
@@ -67,7 +67,7 @@ The value language copies several ideas from Haskell: infix constructors using b
 
 Here are the data types which represent terms and types, along with their pretty printing functions:
 
-~~~{.haskell}
+~~~{.text}
 data Tm 
   = TmName String
   | TmAtom String 
@@ -102,7 +102,7 @@ Parsing Types and Values Using Parsec
 
 Now let's implement a parser. To keep things simple, I'm going to use the lexer generator from `Text.Parsec.Token`.
 
-~~~{.haskell}
+~~~{.text}
 languageDef :: P.LanguageDef st
 languageDef = L.haskellStyle 
   { P.opStart         = fail "Operators are not supported"
@@ -130,7 +130,7 @@ identl = lookAhead lower >> identifier
 
 There are parsers for terms:
 
-~~~{.haskell}  
+~~~{.text}  
 tmName :: Parsec String u Tm
 tmName = lexeme $ identl >>= return . TmName
   
@@ -156,7 +156,7 @@ tm = E.buildExpressionParser
 
 and parsers for types:
 
-~~~{.haskell}  		 
+~~~{.text}  		 
 tyVar :: Parsec String u Ty
 tyVar = lexeme $ identl >>= return . TyVar
 
@@ -175,7 +175,7 @@ ty = E.buildExpressionParser
 
 The parsers `tm` and `ty` are then used to construct top-level parsers `schema` for type declarations and `doc` for value declarations:
 
-~~~{.haskell}  	
+~~~{.text}  	
 valueDecl :: Parsec String u (String, Tm)
 valueDecl = do
   name <- identl
@@ -214,7 +214,7 @@ The next step is to write the typechecker. This is actually quite simple since t
 
 The first step is to implement a unification function. This is very easy: types are either equal modulo variable substitution, or they do not unify at all:
 
-~~~{.haskell}
+~~~{.text}
 unify :: Ty -> Ty -> Either String [(String, Ty)]
 unify (TyVar s) (TyVar t) = return []
 unify (TyVar s) t = return [(s, t)]
@@ -228,7 +228,7 @@ unify t1 t2 = Left $ "Cannot unify " ++ prettyTy t1 ++ " with " ++ prettyTy t2
 
 Type variable substitution is also a simple pattern match:
 
-~~~{.haskell}
+~~~{.text}
 subst :: [(String, Ty)] -> Ty -> Ty
 subst vs v@(TyVar s) = maybe v id $ lookup s vs
 subst vs (TyApp t1 t2) = TyApp (subst vs t1) (subst vs t2)
@@ -238,7 +238,7 @@ subst _ t = t
 
 One important function which is used in the typechecker is `specialize`, which is used to apply a polymorphic function to an argument. The idea is that `specialize f x` should return the most general type of `f x`. The helper function `isFunction` is used to ensure that each type variable was unified with at most one type.
 
-~~~{.haskell}
+~~~{.text}
 isFunction :: (Eq dom, Eq cod) => [(dom, cod)] -> Bool
 isFunction = all ((== 1) . length . nub . map snd) . groupBy ((==) `on` fst)
   
@@ -254,7 +254,7 @@ We need one more helper function, which is used to rename free variables in a po
 
 The `renameAll` function gives new names to all of the free type variables appearing in a type, using an association list to store the currently-generated names:
 
-~~~{.haskell}
+~~~{.text}
 renameAll :: (Eq a) => a -> Ty -> S.State [((String, a), String)] Ty
 renameAll _ t@(TyCon _) = return t
 renameAll key (TyVar v) = do
@@ -274,7 +274,7 @@ unusedName used = head $ map (("t" ++) . show) [0..] \\ used
 
 We can now write the typechecker. It is a simple application of the `specialize` and `renameAll` helper functions:
 
-~~~{.haskell}
+~~~{.text}
 typeOf :: [(String, Ty)] -> Tm -> Either String Ty
 typeOf ctx (TmName s) = maybe (Left $ "Unknown name " ++ s) Right $ lookup s ctx
 typeOf ctx (TmAtom s) = maybe (Left $ "Unknown constructor " ++ s) Right $ lookup s ctx
@@ -299,7 +299,7 @@ typesOf ctx ((name, tm):tms) = do
 
 Let's test the typechecker and parser on some of the examples at the top of the post:
 
-~~~{.haskell}
+~~~{.text}
 parseErr p = either (Left . show) Right . parse p ""
   
 test sch val = do
@@ -325,7 +325,7 @@ A Mini Language For Relational Queries
 
 As a more useful example, I've put together a minimal DSL for partially typed relational queries. The type system is used to make sure pairs of columns equated in joins have the same type, and to track the tables used in a query. Try replacing some of the constructors to see the ways in which the type system is used!
 
-~~~{.haskell}
+~~~{.text}
 relationSchema = unlines 
   [ "UserID         :: Column User PK;"
   , "UserName       :: Column User String;"
@@ -360,7 +360,7 @@ The kind checker below is a modified version of a type checker from an earlier p
 
 Here is the type of kinds, including placeholders for unknown kinds:
 
-~~~{.haskell}
+~~~{.text}
 type Unknown = Int
   
 data Kind
@@ -377,7 +377,7 @@ prettyKind (KindArr k1 k2) = prettyKind k1 ++ " -> " ++ prettyKind k2
 
 I'll start as usual with some basic utility functions which will be used during kind checking. Two crucial functions are the replacement of an unknown with another kind, and an occurs-check function:
 
-~~~{.haskell}
+~~~{.text}
 replace :: Unknown -> Kind -> Kind -> Kind
 replace i x u@(KindUnknown j) 
   | i == j = x
@@ -395,7 +395,7 @@ occursCheck i x = occursCheck' i x where
 
 Constraint generation happens by unification. The `unify` function takes two kinds and generates the constraints imposed by their equality, or returns a unification error.
 
-~~~{.haskell}
+~~~{.text}
 type KindConstraint = (Unknown, Kind)
 
 type SolutionSet = Unknown -> Kind
@@ -410,7 +410,7 @@ unifyKinds k1 k2 = fail $ "Cannot unify " ++ show k1 ++ " with " ++ show k2
 
 The general constraint generation function works bottom-up over the structure of a type:
 
-~~~{.haskell}
+~~~{.text}
 generateConstraints :: (Monad m, S.MonadState ([(String, Unknown)], Unknown) m) => Ty -> m [KindConstraint]
 generateConstraints ty = do
   (cs, n) <- generateConstraints' ty
@@ -446,7 +446,7 @@ newUnknown = S.modify (id *** (+1)) >> S.get >>= return . snd
 
 Constraints are solved by substitution using `replace`:
   
-~~~{.haskell}
+~~~{.text}
 solve :: [KindConstraint] -> Either String SolutionSet
 solve cs = solve' cs KindUnknown where
   solve' [] ss = return ss
@@ -464,7 +464,7 @@ solve cs = solve' cs KindUnknown where
 
 Now we can write the kind checker. The `applications` function splits an arrow type into parts, so that kind checking can work on each part.
 
-~~~{.haskell}
+~~~{.text}
 applications :: Ty -> [Ty]
 applications t = applications' t [] where
   applications' (TyArr t1 t2) = applications' t1 . applications' t2

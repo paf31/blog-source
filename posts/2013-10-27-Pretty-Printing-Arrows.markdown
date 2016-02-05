@@ -8,7 +8,7 @@ tags: Haskell
 
 I'd like to show a neat use of arrows for pretty printing an AST.
 
-~~~{.haskell}
+~~~{.text}
 {-# LANGUAGE GADTs, GeneralizedNewtypeDeriving #-} 
 
 import Data.Maybe (fromMaybe)
@@ -21,7 +21,7 @@ import Control.Arrow ((***), (<+>))
 
 Suppose you had defined a type of syntax trees and wanted to write a function to print their representations as code: 
 
-~~~{.haskell}
+~~~{.text}
 data Expr = Var String
           | Abs String Expr
           | App Expr Expr deriving Show
@@ -31,7 +31,7 @@ data Expr = Var String
 
 A first attempt might look something like this:
 
-~~~{.haskell}
+~~~{.text}
 pretty1 :: Expr -> String
 pretty1 (Var v) = v
 pretty1 (Abs v e) = "\\" ++ v ++ " -> " ++ pretty1 e
@@ -53,7 +53,7 @@ This certainly generates valid code, but the resulting strings tend to contain a
 
 Another approach is to thread the current precedence level as an argument, and to parenthesize as a last resort:
 
-~~~{.haskell}
+~~~{.text}
 type Precedence = Int
 
 pretty2 :: Expr -> String
@@ -93,7 +93,7 @@ The really neat thing is that almost all of the required code can be derived usi
 
 Here is the definition of a `Pattern` as an `Arrow`. It takes a value of type `a`, and either matches successfully, returning a value of type `b`, or fails. Failure is modelled using the Kleisli category for the `Maybe` monad:
 
-~~~{.haskell}
+~~~{.text}
 newtype Pattern a b = Pattern { runPattern :: A.Kleisli Maybe a b } 
   deriving (C.Category, A.Arrow, A.ArrowZero, A.ArrowPlus)
 
@@ -107,7 +107,7 @@ Note: there is also an instance for `Applicative` which gives another way to wor
 
 One thing we can't immediately `derive` is the `Functor` instance for `Pattern`, which will come in useful later. Fortunately, it is easy to write by hand
 
-~~~{.haskell}
+~~~{.text}
 instance Functor (Pattern a) where
   fmap f p = Pattern $ A.Kleisli $ fmap f . pattern p
 ~~~
@@ -116,7 +116,7 @@ instance Functor (Pattern a) where
 
 Here are some examples of `Pattern`s
 
-~~~{.haskell}
+~~~{.text}
 var :: Pattern Expr String
 var = Pattern $ A.Kleisli var'
   where var' (Var s) = Just s
@@ -139,7 +139,7 @@ I imagine these are the sort of the thing one could write a Template Haskell spl
 
 Now we can write some combinators in the spirit of `Text.Parsec` which allow us to build up new patterns from old, and to apply a pattern recursively:
 
-~~~{.haskell}
+~~~{.text}
 chainl :: Pattern a (a, a) -> (r -> r -> r) -> Pattern a r -> Pattern a r
 chainl split f p = fix $ \c -> (split >>> ((c <+> p) *** p) >>> A.arr (uncurry f))
 
@@ -154,7 +154,7 @@ wrap split f p = fix $ \c -> (split >>> (C.id *** (c <+> p)) >>> A.arr (uncurry 
 
 In fact, we can go one step further and derive a pattern from a precedence table in the manner of `Text.Parsec.Expr`:
 
-~~~{.haskell}
+~~~{.text}
 data OperatorTable a r = OperatorTable { runOperatorTable :: [ [Operator a r] ] }
 
 data Operator a r where
@@ -173,7 +173,7 @@ buildPrettyPrinter table p = foldl (\p' ops -> foldl1 (<+>) (flip map ops $ \op 
 
 We need one final function, which parenthesizes an expression:
 
-~~~{.haskell}
+~~~{.text}
 parenthesize :: Pattern a String -> Pattern a String
 parenthesize = fmap parens 
   where
@@ -184,7 +184,7 @@ parenthesize = fmap parens
 
 This gives us the parts we need to express our previous pretty printer as a `Pattern`:
 
-~~~{.haskell}
+~~~{.text}
 expr = buildPrettyPrinter ops (var <+> parenthesize expr)
   where 
     ops = OperatorTable
@@ -202,7 +202,7 @@ Note that, just like when we define parsers using `Text.Parsec.Expr`, the use of
 
 Here's another example, of expressions supporting integer constants and binary operators.
 
-~~~{.haskell}
+~~~{.text}
 data Eqn = Const Int
          | Bin Eqn Char Eqn deriving Show
 

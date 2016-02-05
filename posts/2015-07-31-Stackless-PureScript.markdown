@@ -18,7 +18,7 @@ construct a `Monad` for free, which can be used to combine those terms.
 Free monads can be used to construct models of _coroutines_, by using the base functor to specify the operations which 
 can take place when a coroutine suspends:
 
-```haskell
+```text
 data Emit a = Emit o a
 
 type Producer = Free Emit
@@ -51,7 +51,7 @@ binds, giving a free monad implementation which supports deep recursion.
 
 This technique is also used in the `purescript-free` library, where the data constructor capturing the bind is named `Gosub`:
 
-```haskell
+```text
 newtype GosubF f a b = GosubF (Unit -> Free f b) (b -> Free f a)
 
 data Free f a = Pure a
@@ -83,7 +83,7 @@ Fortunately, all is not lost. A neat trick known to the PureScript community sav
 
 The PureScript compiler performs tail-call elimination for self-recursive functions, so that a function like
 
-```haskell
+```text
 pow :: Int -> Int -> Int
 pow n p = go { accum: 1, power: p }
   where
@@ -95,7 +95,7 @@ gets compiled into an efficient `while` loop.
 
 However, we do not get the same benefit when using monadic recursion:
 
-```haskell
+```text
 powWriter :: Int -> Int -> Writer Product Unit
 powWriter n = go
   where
@@ -107,7 +107,7 @@ powWriter n = go
 
 However, we can refactor the original function to isolate the recursive function call:
 
-```haskell
+```text
 pow :: Int -> Int -> Int
 pow n p = tailRec go { accum: 1, power: p }
   where
@@ -118,7 +118,7 @@ pow n p = tailRec go { accum: 1, power: p }
 
 where the `tailRec` function is defined in the `Control.Monad.Rec.Class` module, with type:
 
-```haskell
+```text
 tailRec :: forall a b. (a -> Either a b) -> a -> b
 ```
 
@@ -128,7 +128,7 @@ the loop, we use the `Right` constructor.
 The type of `tailRec` can be generalized to several monad transformers from the `purescript-transformers` library using the 
 following type class in the `purescript-tailrec` library:
 
-```haskell
+```text
 class (Monad m) <= MonadRec m where
   tailRecM :: forall a b. (a -> m (Either a b)) -> a -> m b
 ```
@@ -140,7 +140,7 @@ closed under transformers like `StateT`, `ErrorT`, `WriterT` etc. It is also eno
 
 We can steal the `Gosub` trick from the `Free` monad implementation and apply it to our proposed `FreeT`:
 
-```haskell
+```text
 data GosubF f m b a = GosubF (Unit -> FreeT f m a) (a -> FreeT f m b)
 
 data FreeT f m a 
@@ -154,7 +154,7 @@ us to build computations safely using recursion. The difficult problem is how to
 Instead of allowing interpretation in any monad, we only support interpretation in one of our tail recursive monads. We can reduce
 the process of interpreting the computation to a tail recursive function in that monad:
 
-```haskell
+```text
 runFreeT :: forall f m a. (Functor f, MonadRec m) => (forall a. f a -> m a) -> FreeT f m a -> m a
 ```
 
@@ -165,7 +165,7 @@ See the [implementation of `runFreeT`](https://github.com/paf31/purescript-freet
 Given a stack-safe implementation of the free monad transformer, it becomes simple to translate the coroutines from [1] into PureScript. Here is
 an example of a producer/consumer pair described using two coroutines:
 
-```haskell
+```text
 producer :: forall m. (Monad m) => Producer Int m Unit
 producer = go 0
   where
@@ -181,7 +181,7 @@ consumer = forever do
 Despite the monadic recursion in `producer`, these coroutines can be connected and run using a constant amount of stack, thanks to the 
 combination of tricks above:
 
-```haskell
+```text
 main = runProcess (producer $$ consumer)
 ```
 

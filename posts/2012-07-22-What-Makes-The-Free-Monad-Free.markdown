@@ -10,7 +10,7 @@ I\'d like to give an explanation of the word \'free\' in \'free monad\'. When we
 
 Let's recap the definition of a free monad.
 
-~~~{.haskell}
+~~~{.text}
 {-# LANGUAGE Rank2Types #-}
 
 import Control.Monad (join)
@@ -22,7 +22,7 @@ The free monad for a functor `f` is given by the fixed point of the bifunctor `X
 
 Thus, the free monad describes structures whose pattern of recursion looks like `f`, but where whole substructures can be replaced with a leaf of type `A`. The free monad defines a functor in `A`, and a monad, for any functor `f`:
 
-~~~{.haskell}
+~~~{.text}
 instance (Functor f) => Functor (Free f) where
   fmap f (Return x) = Return (f x)
   fmap f (Bind xs) = Bind (fmap (fmap f) xs)
@@ -35,7 +35,7 @@ instance (Functor f) => Monad (Free f) where
 
 As a mapping from functors to monads, `Free` is also a functor, from the category of endofunctors to the category of monads and monad morphisms. A monad morphism is just a natural transformation which commutes with the return and bind operations.
 
-~~~{.haskell}
+~~~{.text}
 mapFree :: (Functor f, Functor g) => (forall a. f a -> g a) -> Free f a -> Free g a
 mapFree f (Return x) = Return x
 mapFree f (Bind xs) = Bind $ f $ fmap (mapFree f) xs
@@ -47,7 +47,7 @@ We need to give a natural equivalence between hom-sets `Free f ~> m` in the cate
 
 That is, we need to define mappings with the following signatures:
 
-~~~{.haskell}
+~~~{.text}
 leftAdjunct :: (Functor f, Monad m) => (forall a. f a -> m a) -> Free f a -> m a
 rightAdjunct :: (Functor f, Monad m) => (forall a. Free f a -> m a) -> f a -> m a
 ~~~
@@ -56,7 +56,7 @@ And then show that these are inverses.
 
 Let\'s define these functions by following the types:
 
-~~~{.haskell}
+~~~{.text}
 leftAdjunct _ (Return x) = return x
 leftAdjunct phi (Bind xs) = join $ phi $ fmap (leftAdjunct phi) xs
 

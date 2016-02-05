@@ -12,7 +12,7 @@ For example, the combinator `K x y = x` should be disallowed because the variabl
 
 The combinators `S` and `K` form a basis for the set of unrestricted lambda terms, so one should ask, is there anything interesting left after they are removed? Indeed, one can find a useful basis for the class of linear lambda terms, which we will express in Haskell below.
 
-~~~{.haskell}
+~~~{.text}
 {-# LANGUAGE RankNTypes, DataKinds, GADTs, TypeOperators #-}
 
 module Lin where
@@ -24,7 +24,7 @@ The thing which prevents `S` from being an inhabitant of our desired type is tha
 
 We need to ensure that each variable only occurs on one side of each application, and this motivates the following definition of a splitting of a set of variables `s` into two disjoint sets `v1`, `v2` of variables whose union is `s`. The only splitting of the empty set is `E`, the empty splitting, and one can obtain a splitting of `(v:vs)` from a splitting of `vs` by adding `v` to either the left set `v1` or to the right set `v2`:
 
-~~~{.haskell}
+~~~{.text}
 data Splitting v1 v2 s where
   E :: Splitting '[] '[] '[]
   L :: Splitting xs ys s -> Splitting (x ': xs) ys (x ': s)
@@ -33,7 +33,7 @@ data Splitting v1 v2 s where
 
 With that, here is the definition of the set of linear lambda terms. The definition looks similar to a definition of unrestricted lambda terms, modulo extra type constraints.
 
-~~~{.haskell}
+~~~{.text}
 data Lin vars where
   Var :: v -> Lin (v ': '[])
   App :: Splitting vs ws s -> Lin vs -> Lin ws -> Lin s
@@ -50,20 +50,20 @@ A variable can only be constructed in the context of a single bound variable - t
 
 Finally, a closed linear lambda term is a linear lambda term with no free variables:
 
-~~~{.haskell}
+~~~{.text}
 type Closed = Lin '[]
 ~~~
 
 Now we can express some linear lambda terms. The identity is the simplest example:
 
-~~~{.haskell}
+~~~{.text}
 -- I x = x
 i = Abs (\x -Var x)
 ~~~
 
 The `B` and `C` combinators are a little trickier, since one has to define the splitting of the set of bound variables for every application. For example, the first application in `B` says "`x` goes on the left of the application, `y` and `z` go on the right".
 
-~~~{.haskell}
+~~~{.text}
 -- B x y z = x (y z)
 b = Abs (\x -> Abs (\y -> Abs (\z -> App (R $ R $ L $ E) (Var x) (App (R $ L $ E) (Var y) (Var z)))))
 
