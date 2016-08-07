@@ -2,7 +2,7 @@ body {
     background-color: #FFFFFF;
     font-family: 'Roboto Slab';
     color: #222;
-    margin: 0;
+    margin: 10px;
 }
 
 body > * {
@@ -33,11 +33,19 @@ blockquote {
 }
 
 code {
-    background-color: #EEEEEE;
+    background-color: #eee;
     color: black;
 }
 
 pre {
     margin: 20px 0;
     font-size: 0.8em;
+    background-color: #222;
+    border: 0;
+    border-radius: 10px;
 }
+
+  pre code {
+      background-color: #222;
+      color: white;
+  }

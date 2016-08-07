@@ -83,13 +83,8 @@ defaultTemplate title rootPrefix body = do
       H.link ! A.rel "stylesheet"
              ! A.type_ "text/css"
              ! A.href (fromString $ rootPrefix </> "assets" </> "default.css")
-      H.link ! A.rel "stylesheet"
-             ! A.type_ "text/css"
-             ! A.href "http://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.7/styles/default.min.css"
       H.meta ! A.name "viewport" ! A.content "width=device-width, initial-scale=1"
       H.script ! A.type_ "text/javascript" ! A.src (fromString $ rootPrefix </> "assets" </> "gaq.js") $ mempty
-      H.script ! A.type_ "text/javascript" ! A.src "http://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.7/highlight.min.js" $ mempty
-      H.script ! A.type_ "text/javascript" $ fromString "hljs.initHighlightingOnLoad();"
     H.body $
        H.div ! A.class_ "container" $ do
          H.section $ do
