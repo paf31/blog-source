@@ -1,3 +1,4 @@
+.stack-work/
 output
 .cabal-sandbox/
 cabal.sandbox.config

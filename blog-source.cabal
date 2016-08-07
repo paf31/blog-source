@@ -12,12 +12,12 @@ cabal-version:       >=1.10
 executable blog-source
   main-is:             Main.hs
   other-extensions:    OverloadedStrings
-  build-depends:       base >=4.7 && <4.9, 
+  build-depends:       base >=4.7 && <4.9,
                        filepath -any,
                        process -any,
                        old-time -any,
                        directory -any,
-                       cheapskate >= 0.1 && < 0.2,
-                       split >= 0.2.2 && < 0.3,
-                       blaze-html >= 0.7.1 && < 0.8
+                       cheapskate,
+                       split,
+                       blaze-html
   default-language:    Haskell2010
