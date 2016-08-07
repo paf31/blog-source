@@ -48,7 +48,7 @@ uncurry :: Pairing ((->) a) ((,) a)
 cocurry :: Pairing ((,) a) ((->) a)
 ```
 
-Edward Kmett [has written about pairings before](http://comonad.com/reader/2008/the-cofree-comonad-and-the-expression-problem/), and his `adjunctions` library contains the [relevant code](http://hackage.haskell.org/package/adjunctions-0.6.0/docs/Data-Functor-Zap.html). There is also a PureScript implementation](https://pursuit.purescript.org/packages/purescript-pairing/1.4.0/docs/Data.Functor.Pairing) available.
+Edward Kmett [has written about pairings before](http://comonad.com/reader/2008/the-cofree-comonad-and-the-expression-problem/), and his `adjunctions` library contains the [relevant code](http://hackage.haskell.org/package/adjunctions-0.6.0/docs/Data-Functor-Zap.html). There is also a [PureScript implementation](https://pursuit.purescript.org/packages/purescript-pairing/1.4.0/docs/Data.Functor.Pairing) available.
 
 ### Examples of Pairings
 
