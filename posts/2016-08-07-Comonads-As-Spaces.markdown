@@ -90,14 +90,14 @@ pair :: Pairing f1 f2
 
 Plenty of monads and comonads provide interesting examples of pairings:
 
-- The `State s` monad pairs with the `Store s` comonad. In fact, `StateT s m` pairs with `StoreT s w` whenever `m` pairs with `m`.
+- The `State s` monad pairs with the `Store s` comonad. In fact, `StateT s m` pairs with `StoreT s w` whenever `m` pairs with `w`.
 - `WriterT a m` pairs with `TracedT a w` whenever `m` pairs with `w`.
 - `ReaderT r m` pairs with `EnvT r w` whenever `m` pairs with `w`.
 - `Free f` pairs with `Cofree g` whenever `f` pairs with `g`.
 
 ### Monads from Comonads
 
-Edward Kmett has written a [series of blog posts](http://comonad.com/reader/2011/monads-from-comonads/) about generating a monad (and in fact, a [monad transformer](http://comonad.com/reader/2011/monad-transformers-from-comonads/)) from every comonad.
+Edward Kmett has written a [series of blog posts](http://comonad.com/reader/2011/monads-from-comonads/) about generating a monad (and in fact, a [monad transformer](http://comonad.com/reader/2011/monad-transformers-from-comonads/)) from any comonad.
 
 The first blog post describes the following type:
 
@@ -107,7 +107,7 @@ newtype Co w a = Co { runCo :: forall r. w (a -> r) -> r }
 
 and shows that `Co w` is a `Monad` whenever `w` is a `Comonad`.
 
-Another way of looking at this type is that `Co` is way of constructing a functor which pairs with any functor `f`, since `Co f` pairs with `f`:
+Another way of looking at this type is that `Co` is way of constructing a functor which pairs with any given functor `f`, since `Co f` pairs with `f`:
 
 ```haskell
 pairCo :: Pairing f (Co f)
@@ -134,7 +134,7 @@ Let's see some examples:
 
 A pairing between a comonad `w` and a monad `m` gives a way to explore the data in a comonadic value. We can think of this as moving around in the space described by the comonad.
 
-We would like the actions of `m` to describe movements which we can use to modify a comonadic value of type `m a`.
+We would like the actions of `m` to describe movements which we can use to modify a comonadic value of type `w a`.
 
 To implement this, we use the `extend` function from the `Comonad` class to extend the pairing function to every comonadic subcontext:
 
