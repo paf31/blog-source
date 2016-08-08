@@ -42,7 +42,7 @@ cocurry (a, bc) ab = bc (ab a)
 We can generalize this to a _pairing_ between two functors as follows:
 
 ```haskell
-type Pairing f g = forall a b. f (a -> b) -> g b -> c
+type Pairing f g = forall a b. f (a -> b) -> g a -> b
 
 uncurry :: Pairing ((->) a) ((,) a)
 cocurry :: Pairing ((,) a) ((->) a)
