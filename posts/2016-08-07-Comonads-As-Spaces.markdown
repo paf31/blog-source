@@ -111,7 +111,7 @@ Another way of looking at this type is that `Co` is way of constructing a functo
 
 ```haskell
 pairCo :: Pairing f (Co f)
-pairCo f cof = cof f
+pairCo f cof = runCo cof f
 ```
 
 (the opposite pairing is left as an exercise)
