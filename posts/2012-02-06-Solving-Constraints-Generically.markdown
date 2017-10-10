@@ -67,12 +67,12 @@ replace i x = flip (>>=) (\j -> if i == j then x else Return j)
 solve :: (Functor f, Unifiable f) => [Constraint f] -> SolutionSet f
 solve cs = solve' cs Return where
   solve' [] ss = ss
-  solve' (c:cs) ss = 
+  solve' (c:cs) ss =
     let cs' = substConstraints c cs in
     let ss' = substSolutionSet c ss in
     solve' cs' ss'
   substConstraints c [] = []
-  substConstraints (i, x) ((j, y): cs) 
+  substConstraints (i, x) ((j, y): cs)
     | i == j = (substConstraints (i, x) cs) ++ (unify x y)
     | otherwise = ((j, replace i x y) : substConstraints (i, x) cs)
   substSolutionSet (i, x) = (.) (replace i x)
@@ -122,9 +122,11 @@ example = [
 
 One can check that solve does indeed determine the correct type for the `S` combinator:
 
-> ghci> solve example 8
-> 
-> ((2 -> (4 -> 5)) -> ((2 -> 4) -> (2 -> 5)))
+~~~{.text}
+ghci> solve example 8
+
+((2 -> (4 -> 5)) -> ((2 -> 4) -> (2 -> 5)))
+~~~
 
 Now that we can solve constraints, let\'s write a method to determine constraints for the specific example of terms of the simply-typed lambda calculus. There are three types of terms: variables, applications and abstractions. To save passing around environments containing strings, we will represent the bound variables in a term using a type variable. Abstraction will introduce a new type variable, and parametricity will prevent us from creating any ill-defined terms:
 
@@ -211,10 +213,12 @@ k = Abs (\x -> Abs (\y -> Var $ Left $ Right $ x))
 
 We can test these examples in GHCi as follows:
 
-> ghci> solve (generateConstraints s) 8
-> 
-> ((2 -> (4 -> 5)) -> ((2 -> 4) -> (2 -> 5)))
-> 
-> ghci> solve (generateConstraints k) 3
-> 
-> (0 -> (1 -> 0))
+~~~{.text}
+ghci> solve (generateConstraints s) 8
+
+((2 -> (4 -> 5)) -> ((2 -> 4) -> (2 -> 5)))
+
+ghci> solve (generateConstraints k) 3
+
+(0 -> (1 -> 0))
+~~~

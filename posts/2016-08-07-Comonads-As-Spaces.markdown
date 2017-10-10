@@ -136,11 +136,12 @@ A pairing between a comonad `w` and a monad `m` gives a way to explore the data 
 
 We would like the actions of `m` to describe movements which we can use to modify a comonadic value of type `w a`.
 
-To implement this, we use the `extend` function from the `Comonad` class to extend the pairing function to every comonadic subcontext:
+To implement this, we first `duplicate` our comonadic structure of future states (to get a data structure describing all future states together with their own futures), and then
+we use the pairing function to extract the single set of future states that we want:
 
 ```haskell
 moving :: Comonad w => Pairing m w -> m (a -> b) -> w a -> w b
-moving pair m w = extend (pair m)
+moving pair m w = pair m (duplicate w)
 
 move :: (Comonad w, Functor m) => Pairing m w -> m () -> w a -> w a
 move pair m = moving pair (m $> id)

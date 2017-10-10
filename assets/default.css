@@ -10,26 +10,50 @@ body > * {
 }
 
 h1 {
-    text-shadow: 3px 3px 10px rgba(0, 0, 0, 0.2);
+    text-shadow: 3px 3px 12px rgba(0, 0, 0, 0.2);
+    font-size: 28px;
 }
 
   h1 > a {
-    color: #222;
+    color: #777;
   }
 
 h2, h3 {
     line-height: 2em;
-    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2);
+    text-shadow: 1px 1px 6px rgba(0, 0, 0, 0.2);
 }
 
 .container {
     padding: 25px 0;
 }
 
+header {
+    flex: 0.25;
+    color: #777;
+}
+
+@media (min-width: 1000px) {
+    .container {
+        display: flex;
+    }
+
+    header {
+        margin-top: 50px;
+    }
+}
+
+main {
+    flex: 0.75;
+}
+
 blockquote {
-    background: white;
-    border-left: 5px solid #ccc;
+    background: #ededed;
+    border: 0;
     padding: 1em;
+    margin: 20px 0;
+    font-size: 14px;
+    border: 0;
+    border-radius: 0;
 }
 
 code {
@@ -39,13 +63,14 @@ code {
 
 pre {
     margin: 20px 0;
-    font-size: 0.8em;
-    background-color: #222;
+    font-size: 12px;
+    background-color: #2a2a2a;
     border: 0;
-    border-radius: 10px;
+    border-radius: 0;
 }
 
   pre code {
-      background-color: #222;
+      background-color: #2a2a2a;
+      font-family: 'Roboto Mono';
       color: white;
   }

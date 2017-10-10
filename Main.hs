@@ -79,6 +79,9 @@ defaultTemplate title rootPrefix body = do
              ! A.href "http://fonts.googleapis.com/css?family=Roboto+Slab:400,300"
       H.link ! A.rel "stylesheet"
              ! A.type_ "text/css"
+             ! A.href "http://fonts.googleapis.com/css?family=Roboto+Mono:400,300"
+      H.link ! A.rel "stylesheet"
+             ! A.type_ "text/css"
              ! A.href "http://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css"
       H.link ! A.rel "stylesheet"
              ! A.type_ "text/css"
@@ -87,14 +90,11 @@ defaultTemplate title rootPrefix body = do
       H.script ! A.type_ "text/javascript" ! A.src (fromString $ rootPrefix </> "assets" </> "gaq.js") $ mempty
     H.body $
        H.div ! A.class_ "container" $ do
-         H.section $ do
+         H.header $ do
            H.h1 $ H.a ! A.href (fromString $ rootPrefix </> "index.html") $ fromString "Functorial Blog"
            H.p ! A.class_ "lead" $ fromString "A blog about functional programming"
-           H.hr
-         H.section body
-         H.section $ do
-           H.hr
-           H.p ! A.class_ "text-muted" $ H.small $ fromString "Copyright Phil Freeman 2010-2016"
+           H.p ! A.class_ "text-muted" $ H.small $ fromString "© Phil Freeman 2010-2017"
+         H.main body
 
 renderPost :: Post -> H.Html
 renderPost Post{..} = do
@@ -111,9 +111,11 @@ renderPostLink rootPrefix Post{..} = do
   let title = maybe "" id $ lookup "title" tags
       date = maybe "" id $ lookup "date" tags
   H.li $ do
-    H.em $ fromString date
-    fromString " - "
     H.a ! A.href (fromString $ rootPrefix </> "posts/" </> postFilename filename) $ fromString title
+    H.em ! A.class_ "text-muted" $ do
+      fromString " ("
+      fromString date
+      fromString ")"
 
 renderIndex :: [Post] -> H.Html
 renderIndex posts = defaultTemplate "functorial" "./" $ do
