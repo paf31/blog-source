@@ -186,7 +186,7 @@ CCC k => (k (Tensor k i a) a -> k (Tensor k i a) b) -> k i (Hom k a b)
 And now, this is simple to implement!
 
 ```haskell
-
+lam1 :: CCC k => (k (Tensor k i a) a -> k (Tensor k i a) b) -> k i (Hom k a b)
 lam1 f = curry (f exr)
 ```
 
