@@ -153,7 +153,7 @@ Let's see if we can define `app` and `lam` functions for this representation.
 app :: forall k i a b. CCC k => k i (Hom k a b) -> k i a -> k i b
 app f x = eval <<< fork f x
 
-eval :: forall a b. k (Tensor k (Hom k a b) a) b
+eval :: forall k a b. CCC k => k (Tensor k (Hom k a b) a) b
 eval = uncurry id
 ```
 
