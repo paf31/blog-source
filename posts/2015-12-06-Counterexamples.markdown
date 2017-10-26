@@ -9,7 +9,7 @@ tags: Haskell
 In Haskell and PureScript, we are familiar with certain standard hierarchies of type classes. For example, here are some of the type classes provided by the PureScript core libraries:
 
 - `Semigroup`, `Monoid`
-- `Semiring`, `Ring`, `ModuloSemiring`, `DivisionRing`, `Num`
+- `Semiring`, `Ring`, `CommutativeRing`, `EuclideanRing`, `Field`
 - `Functor`, `Apply`, `Applicative`, `Bind`, `Monad`
 - `Extend`, `Comonad`
 - `Alt`, `Plus`, `Alternative`
@@ -42,9 +42,9 @@ data NonEmpty a = NonEmpty a (List a)
 
 In fact, `NonEmpty a` is the _free semigroup_ for the type `a`.
 
-In general, structures which lack empty elements might have instances of `Semigroup` but not of `Monoid`.
-
 ### Notes on Semigroup
+
+In general, structures which lack empty elements might have instances of `Semigroup` but not of `Monoid`.
 
 The free construction of a `Monoid` from a `Semigroup` is to simply add an empty element:
 
@@ -74,9 +74,9 @@ Here, we can use the `append` operation to collect multiple errors, but we do no
 
 `Validation` is _not_ a `Monad`, unlike `Either`, since there is no implementation of `>>=` which is compatible with the `Applicative` implementation.
 
-## The Num Hierarchy
+## The Field Hierarchy
 
-The `Num` type class from Haskell is refined into a number of type classes in PureScript:
+The `Field` type class from Haskell is refined into a number of type classes in PureScript:
 
 ```text
 class Semiring a where
@@ -85,19 +85,31 @@ class Semiring a where
   mul  :: a -> a -> a
   one  :: a
 
-class (Semiring a) <= Ring a where
+class Semiring a <= Ring a where
   sub :: a -> a -> a
 
-class (Semiring a) <= ModuloSemiring a where
+class Ring a <= CommutativeRing a where
+
+class CommutativeRing a <= EuclideanRing a where
   div :: a -> a -> a
   mod :: a -> a -> a
+  degree :: a -> Int
 
-class (Ring a, ModuloSemiring a) <= DivisionRing a
+class Ring a <= DivisionRing a where
+  recip :: a -> a
 
-class (DivisionRing a) <= Num a
+class EuclideanRing a <= Field a
 ```
 
-The `Semiring` class specifies the addition and multiplication operations, while subtraction is split into the `Ring` class. Division and the modulus operator are broken into the `ModuloSemiring` class. `DivisionRing` requires that `(one `div`) :: a -> a` is actually a multiplicative inverse. Finally, `Num` requires that multiplication is commutative.
+The `Semiring` class specifies the addition and multiplication operations, while subtraction is split into the `Ring` class.
+
+Commutative rings are specified by the `CommutativeRing` class.
+
+Division and the modulus operator are broken into the `EuclideanRing` class.
+
+`DivisionRing` specifies an alternative to division in terms of a reciprocal function, and requires that `recip` provides multiplicative inverses. A `DivisionRing` need not be commutative.
+
+Finally, `Field` requires that multiplication is commutative.
 
 ### A Semiring which is not a Ring
 
@@ -111,9 +123,17 @@ data Nat = Zero | Succ Nat
 
 The integers provide an example of a `Ring` which is not a `DivisionRing`, since non-zero integers do not have multiplicative inverses.
 
-### A DivisionRing which is not a Num
+The integers are also an example of a `EuclideanRing` which is not a `Field`.
 
-The quaternions are an example of a structure with multiplicative inverses but non-commutative multiplication.
+### A CommutativeRing which is not a EuclideanRing
+
+Number theory provides examples of commutative rings which fail to be Euclidean. For example, rings which are not principal ideal domains cannot be Euclidean.
+
+Wikipedia provides [some additional counterexamples](https://en.wikipedia.org/wiki/Euclidean_domain#Examples).
+
+### A DivisionRing which is not a CommutativeRing
+
+The quaternions are an example of a structure with multiplicative inverses but non-commutative multiplication. They form a `DivisionRing`, but not a `CommutativeRing`.
 
 ### Notes on Semiring
 
@@ -147,8 +167,10 @@ We can construct a `Ring` from any `Semiring` in the same way as we construct th
 ```text
 data Diff a = Diff a a
 
-instance (Semiring a) => Ring (Diff a)
+instance Semiring a => Ring (Diff a)
 ```
+
+We identify any two values of type `Diff a` which represent the same difference.
 
 ## Notes on DivisionRing
 
@@ -157,8 +179,10 @@ We can formally add divisors to any `Ring` in much the same way:
 ```text
 data Ratio a = Ratio a a
 
-instance (Ring a) => DivisionRing (Ratio a)
+instance Ring a => DivisionRing (Ratio a)
 ```
+
+We disallow zero divisors, and identify any two values of type `Ratio a` which represent the same ratio.
 
 ## The Monad Hierarchy
 
@@ -168,13 +192,13 @@ Haskell's `Monad` hierarchy is further refined in PureScript, by the addition of
 class Functor f where
   map :: forall a b. (a -> b) -> f a -> f b
 
-class (Functor f) <= Apply f where
+class Functor f <= Apply f where
   apply :: forall a b. f (a -> b) -> f a -> f b
 
-class (Apply f) <= Applicative f where
+class Apply f <= Applicative f where
   pure :: forall a. a -> f a
 
-class (Apply m) <= Bind m where
+class Apply m <= Bind m where
   bind :: forall a b. m a -> (a -> m b) -> m b
 
 class (Applicative m, Bind m) <= Monad m
@@ -222,7 +246,7 @@ We have already seen that the validation functor is an example of an `Applicativ
 
 Another example is given by the `ZipList` functor, where `apply` is implemented using `zipWith`:
 
-```haskel
+```haskell
 newtype ZipList a = ZipList (List a)
 ```
 
@@ -259,10 +283,10 @@ where we can recover the original `zip` function by using the `ZipList` applicat
 PureScript refines the `Comonad` type class to extract the `extend` function into its own `Extend` class:
 
 ```text
-class (Functor w) <= Extend w where
+class Functor w <= Extend w where
   extend :: forall b a. (w a -> b) -> w a -> w b
 
-class (Extend w) <= Comonad w where
+class Extend w <= Comonad w where
   extract :: forall a. w a -> a
 ```
 
@@ -271,7 +295,7 @@ class (Extend w) <= Comonad w where
 The function type gives an example of a `Comonad` whenever the domain is monoidal. If we relax the constraint to `Semigroup`, however, we only obtain an `Extend`:
 
 ```text
-instance extendFn :: (Semigroup w) => Extend ((->) w)
+instance extendFn :: Semigroup w => Extend ((->) w)
 ```
 
 For example, the `NonEmpty Unit` semigroup can be thought of as non-zero natural numbers, and gives us an `Extend` instance which allows us to reannotate a semi-infinite tape by considering values (strictly) to the right of the current position.
@@ -289,10 +313,10 @@ For example, the `NonEmpty Unit` semigroup can be thought of as non-zero natural
 In PureScript, the `Alternative` class is refined so that the alternation operator `<|>` is broken out into the `Alt` class, the `empty` structure is defined by the `Plus` class, and `Alternative` is redefined as a combination of `Applicative` and `Plus`:
 
 ```text
-class (Functor f) <= Alt f where
+class Functor f <= Alt f where
   alt :: forall a. f a -> f a -> f a
 
-class (Alt f) <= Plus f where
+class Alt f <= Plus f where
   empty :: forall a. f a
 
 class (Applicative f, Plus f) <= Alternative f
@@ -332,7 +356,7 @@ In PureScript, the `Category` type class is refined by splitting the `compose` o
 class Semigroupoid a where
   compose :: forall b c d. a c d -> a b c -> a b d
 
-class (Semigroupoid a) <= Category a where
+class Semigroupoid a <= Category a where
   id :: forall t. a t t
 ```
 
@@ -385,7 +409,7 @@ In PureScript, the `Arrow` type class is defined in terms of a combination of `C
 class Profunctor p where
   dimap :: forall a b c d. (a -> b) -> (c -> d) -> p b c -> p a d
 
-class (Profunctor p) <= Strong p where
+class Profunctor p <= Strong p where
   first :: forall a b c. p a b -> p (Tuple a c) (Tuple b c)
 
 class (Category a, Strong a) <= Arrow a
