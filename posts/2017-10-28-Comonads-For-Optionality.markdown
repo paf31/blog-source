@@ -133,6 +133,8 @@ So we can think of our dependent store comonad as recovering some of the dynamic
 
 This construction fills in the remaining gap in the comonads as spaces approach to user interfaces, and suggests a new interesting way to build new comonads from old. We can construct models for optional subcomponents, and as we've seen, for lists of subcomponents.
 
+I'd like to thank Arthur Xavier for providing valuable feedback and testing on the ideas presented here.
+
 ### Appendix: Proofs of the comonad laws
 
 #### `extract . duplicate = id`
