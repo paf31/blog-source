@@ -9,9 +9,11 @@ import Data.Monoid
 import Data.Maybe
 import Data.List (intercalate, isSuffixOf, groupBy, nub, sort)
 import Data.List.Split (splitOn, splitOneOf)
+import Data.Time.Format as Time
 
 import Control.Arrow ((***), (&&&))
 import Control.Applicative ((<$>), (<*>))
+import Network.URI as URI
 import System.IO (hPutStr, hClose)
 import System.FilePath (dropExtension, (</>))
 import System.Time
@@ -22,6 +24,8 @@ import Text.Blaze.Html.Renderer.String
 import qualified Text.Blaze.Html5 as H
 import qualified Text.Blaze.Html5.Attributes as A
 
+import Text.RSS as RSS
+
 import Cheapskate (markdown, def)
 import Cheapskate.Html (renderDoc)
 import Cheapskate.Types
@@ -31,6 +35,9 @@ data Post = Post
   , tags     :: [(String, String)]
   , content  :: String
   } deriving (Show, Eq)
+
+copyright :: String
+copyright = "© Phil Freeman 2010-2017"
 
 readTags :: String -> ([(String, String)], [String])
 readTags = readTags' False [] . splitOneOf "\n\r" where
@@ -93,7 +100,8 @@ defaultTemplate title rootPrefix body = do
          H.header $ do
            H.h1 $ H.a ! A.href (fromString $ rootPrefix </> "index.html") $ fromString "Functorial Blog"
            H.p ! A.class_ "lead" $ fromString "A blog about functional programming"
-           H.p ! A.class_ "text-muted" $ H.small $ fromString "© Phil Freeman 2010-2017"
+           H.p $ H.small $ H.a ! A.href (fromString $ rootPrefix </> "feed.rss") $ fromString "RSS Feed"
+           H.p ! A.class_ "text-muted" $ H.small $ fromString copyright
          H.main body
 
 renderPost :: Post -> H.Html
@@ -122,8 +130,43 @@ renderIndex posts = defaultTemplate "functorial" "./" $ do
   H.h2 "Posts"
   H.ul $ mapM_ (renderPostLink ".") posts
 
+renderFeed :: [Post] -> RSS.RSS
+renderFeed posts =
+  RSS.RSS "Functorial Blog"
+          (URI.URI
+            "http:"
+            (Just (URI.URIAuth "" "blog.functorial.com" ""))
+            "/feed.rss"
+            ""
+            "")
+          "A blog about functional programming"
+          [ RSS.Language "English"
+          , RSS.Copyright copyright
+          , RSS.WebMaster "freeman.phil@gmail.com"
+          ]
+          (map renderFeedPost posts)
+
+renderFeedPost :: Post -> RSS.Item
+renderFeedPost post =
+    [ RSS.Title title
+    , RSS.Link $
+        URI.URI
+          "http:"
+          (Just (URI.URIAuth "" "blog.functorial.com" ""))
+          ("/posts/" ++ postFilename (filename post))
+          ""
+          ""
+    , RSS.PubDate (Time.parseTimeOrError True Time.defaultTimeLocale "%Y/%m/%d" date)
+    ]
+  where
+    title = maybe "" id $ lookup "title" (tags post)
+    date = maybe "" id $ lookup "date" (tags post)
+
 writeHtml :: FilePath -> H.Html -> IO ()
 writeHtml fp = writeFile fp . renderHtml
+
+writeRSS :: FilePath -> RSS.RSS -> IO ()
+writeRSS fp = writeFile fp . RSS.showXML . RSS.rssToXML
 
 main :: IO ()
 main = do
@@ -138,3 +181,4 @@ main = do
   mapM_ (\f -> copyFile (dir </> "assets" </> f) (dirAssets </> f)) assets
   mapM_ (\post -> writeHtml (dirPosts </> postFilename (filename post)) (renderPost post)) posts
   writeHtml (dirOutput </> "index.html") (renderIndex posts)
+  writeRSS (dirOutput </> "feed.rss") (renderFeed posts)

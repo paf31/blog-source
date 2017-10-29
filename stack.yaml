@@ -2,3 +2,6 @@ resolver: lts-6.10
 
 packages:
 - '.'
+
+extra-deps:
+- rss-3000.2.0.6
