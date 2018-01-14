@@ -37,7 +37,7 @@ data Post = Post
   } deriving (Show, Eq)
 
 copyright :: String
-copyright = "© Phil Freeman 2010-2017"
+copyright = "© Phil Freeman 2010-2018"
 
 readTags :: String -> ([(String, String)], [String])
 readTags = readTags' False [] . splitOneOf "\n\r" where
@@ -75,44 +75,39 @@ collectTags posts =
   tagsFor = map (dropWhile isSpace) . filter (not . null) . splitOneOf ",". fromJust . lookup "tags" . tags
   allTags = sort . nub . concatMap tagsFor
 
-defaultTemplate :: String -> String -> H.Html -> H.Html
-defaultTemplate title rootPrefix body = do
+defaultTemplate :: String -> String -> String -> H.Html -> H.Html
+defaultTemplate title subtitle rootPrefix body = do
   H.docType
   H.html $ do
     H.head $ do
       H.title $ H.toHtml $ "Functorial Blog - " ++ title
       H.link ! A.rel "stylesheet"
              ! A.type_ "text/css"
-             ! A.href "http://fonts.googleapis.com/css?family=Roboto+Slab:400,300"
+             ! A.href "http://fonts.googleapis.com/css?family=Roboto+Slab:300"
       H.link ! A.rel "stylesheet"
              ! A.type_ "text/css"
-             ! A.href "http://fonts.googleapis.com/css?family=Roboto+Mono:400,300"
-      H.link ! A.rel "stylesheet"
-             ! A.type_ "text/css"
-             ! A.href "http://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css"
+             ! A.href "http://fonts.googleapis.com/css?family=Roboto+Mono:300"
       H.link ! A.rel "stylesheet"
              ! A.type_ "text/css"
              ! A.href (fromString $ rootPrefix </> "assets" </> "default.css")
       H.meta ! A.name "viewport" ! A.content "width=device-width, initial-scale=1"
       H.script ! A.type_ "text/javascript" ! A.src (fromString $ rootPrefix </> "assets" </> "gaq.js") $ mempty
-    H.body $
-       H.div ! A.class_ "container" $ do
-         H.header $ do
-           H.h1 $ H.a ! A.href (fromString $ rootPrefix </> "index.html") $ fromString "Functorial Blog"
-           H.p ! A.class_ "lead" $ fromString "A blog about functional programming"
-           H.p $ H.small $ H.a ! A.href (fromString $ rootPrefix </> "feed.rss") $ fromString "RSS Feed"
-           H.p ! A.class_ "text-muted" $ H.small $ fromString copyright
-         H.main body
+    H.body $ do
+      H.header $ do
+        H.h1 $ fromString title
+        H.p $ fromString subtitle
+        H.hr
+      H.main body
+      H.footer $ do
+        H.hr
+        H.p ! A.class_ "text-muted" $ H.small $ fromString copyright
 
 renderPost :: Post -> H.Html
 renderPost Post{..} = do
   let title = maybe "" id $ lookup "title" tags
       author = maybe "" id $ lookup "author" tags
       date = maybe "" id $ lookup "date" tags
-  defaultTemplate title ".." $ do
-    H.h2 $ fromString title
-    H.p $ H.small $ fromString $ "by " ++ author ++ " on " ++ date
-    markdownToHtml content
+  defaultTemplate title ("by " ++ author ++ " on " ++ date) ".." (markdownToHtml content)
 
 renderPostLink :: String -> Post -> H.Html
 renderPostLink rootPrefix Post{..} = do
@@ -126,9 +121,10 @@ renderPostLink rootPrefix Post{..} = do
       fromString ")"
 
 renderIndex :: [Post] -> H.Html
-renderIndex posts = defaultTemplate "functorial" "./" $ do
+renderIndex posts = defaultTemplate "Functorial Blog" "A blog about functional programming" "./" $ do
   H.h2 "Posts"
   H.ul $ mapM_ (renderPostLink ".") posts
+  H.p $ H.small $ H.a ! A.href "feed.rss" $ fromString "RSS Feed"
 
 renderFeed :: [Post] -> RSS.RSS
 renderFeed posts =
