@@ -38,13 +38,13 @@ All of the above leads us to a simple model of "extensible coeffects": simply ta
 
 Let's compare this approach to a simplified recipe for extensible effects:
 
-- Use functors to describe the effects we would like to model.
+- Use functors to describe the effects we would like to model (in the style of a free monad).
 - Form the coproduct of these functors
 - Form the free monad (transformer) over the coproduct.
 - Lift the actions defined by each functor into the free monad (transformer).
 - Handlers peel of single effects, interpreting a free monad for a coproduct in terms of a free monad for a slightly smaller coproduct, optionally modifying the return type.
 
-The extensible coeffects approach supports most of the features of this model of extensible effects, since a Day convolution of cofree comonads is isomorphic to a cofree comonad for the product of the two underlying functors, and so the corresponding monad is a free monad of a coproduct of functors. We can probably even improve performance by using more optimal comonads such as `Store` in place of `Cofree` comonads where possible.
+The extensible coeffects approach supports many of the features of this model of extensible effects, since we can use cofree comonads to create our own coeffects. We can probably even improve performance by using more optimal comonads such as `Store` in place of `Cofree` comonads where possible.
 
 However, there is one gap which becomes apparent when using coeffects in this way. Extensible effect libraries are usually defined in terms of some base monad such as `IO`. Suppose we want to model a connection to a database - we might define appropriate effects, and the handlers would use the features of some `IO`-supporting base monad to actually talk to the database. With naive extensible coeffects, this is just not possible. There is no comonad `w` for which `Co w` is isomorphic to `IO`.
 
