@@ -23,7 +23,7 @@ Several functors can be usefully paired, such as
 - `State s` with `Store s`
 - `Writer w` with `Traced w`
 - `Free f` with `Cofree g` (assuming `f` and `g` can be paired)
-- `Product f1 g1` with `Coproduct f2 g2` (assuming `f1` and `f1` pair, and `g1` and `g2` pair also)
+- `Product f1 g1` with `Coproduct f2 g2` (assuming `f1` and `f2` pair, and `g1` and `g2` pair also)
 
 Pairings are non-unique, since if I have a pairing between `f` and `g`, and a natural transformation `h ~> f`, then I can construct a pairing of `h` and `g`.
 
