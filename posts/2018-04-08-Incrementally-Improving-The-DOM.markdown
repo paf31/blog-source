@@ -18,11 +18,13 @@ The static DOM approach has some limitations of its own, however:
 - In order to trigger a UI change, however small, we need to construct a new model for the entire static DOM component. Again, in practice, this is not a big problem, but it does make it harder to do certain things. For example, if we wanted to send model changes to the server for evaluation, we would have a hard time.
 - Every change is potentially observed by every node in the static DOM. We can use tricks like filtering out duplicate events from our event streams, but this takes unnecessary time and CPU cycles. Recall, the motivation for the static DOM was that we intuitively _knew_ which elements should receive the events for small model changes such as changing a single text node. The challenge is to convince the machine that this connection between submodels and elements is obvious!
 
+In this post, I'd like to suggest a different approach, which solves these problems but keeps the benefits of the static DOM approach.
+
 ## Enter the Incremental Lambda Calculus
 
-The paper "A Theory of Changes for Higher-Order Languages" by Cai, Giarrusso, Rendel and Ostermann states the following in its abstract:
+The paper ["A Theory of Changes for Higher-Order Languages"](https://arxiv.org/abs/1312.0658) by Cai, Giarrusso, Rendel and Ostermann states the following in its abstract:
 
-> If the result of an expensive computation is invalidated by a small change to the input, the old result should be updated incrementally instead of reexecuting the whole computation. 
+> If the result of an expensive computation is invalidated by a small change to the input, the old result should be updated incrementally instead of reexecuting the whole computation.
 
 This sounds a lot like it applies to our problem! Once we've computed the initial state of the DOM, a small change to the model should result in a small change to the DOM.
 
@@ -37,7 +39,7 @@ class Monoid m <= Patch a m | a -> m where
   patch :: a -> m -> a
 ```
 
-I use a functional dependency to express the monoid as a function of the carrier type. In practice, this means using newtypes in quite a few more places, but makes type inference more pleasant.
+This declaration states that there is a functional relationship between carrier types `a` and change structures `m`, which must be `Monoid`s. I use a functional dependency to express the change structure as a function of the carrier type. In practice, this means using newtypes in quite a few more places, but makes type inference more pleasant.
 
 For example, the `Last a` monoid acts on values of the type `a` via the newtype `Atomic a`:
 
@@ -47,7 +49,7 @@ import Data.Maybe.Last
 newtype Atomic a = Atomic a
 
 instance patchAtomic :: Patch (Atomic a) (Last a) where
-  patch (Atomic a) (Last m) = 
+  patch (Atomic a) (Last m) =
     case m of
       Nothing _ -> Atomic a
       Just b    -> Atomic b
@@ -61,7 +63,7 @@ By interpreting each type and term former in this context, the paper is able to 
 
 ## An Embedded DSL
 
-In my `purescript-incremental-functions` library, I use a different approach, keeping the change structure concept, but implementing incremental functions using an _embedded DSL_. In particular, I use an approach based on _higher-order abstract syntax_, in which incremental functions are represented using regular PureScript functions.
+In my [`purescript-incremental-functions`](https://github.com/paf31/purescript-incremental-functions) library, I use a different approach, keeping the change structure concept, but implementing incremental functions using an _embedded DSL_. In particular, I use an approach based on _higher-order abstract syntax_, in which incremental functions are represented using regular PureScript functions.
 
 It should perhaps not be surprising (if you've read my [other blog post](http://blog.functorial.com/posts/2017-10-08-HOAS-CCCs.html), anyway) that it is possible to give an embedding of incremental lambda calculus in terms of higher-order abstract syntax, but the embedding I use here is in fact _not_ the one I describe in that blog post - it is much simpler.
 
@@ -74,13 +76,9 @@ type Jet a =
   }
 ```
 
-Simple isn't it?
-
 A `Jet` is a value of type `a`, paired with a change of type `Change a`, where `Change a` is the change structure acting on `a`. I say "_the_ change structure", since the functional dependency on `Patch` makes it unique.
 
-We should think of the value `Jet x dx` as being positioned currently at `x`, and _about to move_ by the amount `dx`. This might be reminiscent of dual numbers, from automatic differentiation, in which we pair a number with its rate of change.
-
-In PureScript, we don't have associated types, but we can make a crude approximation by packaging up the (unique) type under a fundep as an abstract data type and using `unsafeCoerce` to construct values (safely!):
+`Change` is defined using something like an _associated type_. In PureScript, unlike in GHC Haskell, we don't have associated types, but we can make a crude approximation by packaging up the (unique) type under a fundep as an abstract data type and using `unsafeCoerce` to construct values (safely!):
 
 ```purescript
 data Change a
@@ -91,6 +89,8 @@ fromChange = unsafeCoerce
 toChange :: forall a da. Patch a da => da -> Change a
 toChange = unsafeCoerce
 ```
+
+We should think of the value `Jet { position: x, velocity: dx }` as being positioned currently at `x`, and _about to move_ by the amount `dx`. This might be reminiscent of dual numbers, from automatic differentiation, in which we pair a number with its rate of change.
 
 Given the definition of `Jet`, the encoding of incremental functions is simple: an incremental function from `a` to `b` (with their associated change structures) is represented by a function from `Jet a` to `Jet b`.
 
@@ -106,7 +106,7 @@ mapAtomic f { position, velocity } =
 
 Here, the result will change only when the input changes.
 
-This is a simple example, but we can create incremental versions of many standard functions: maps, folds, `filter`, `zip`, and so on. My `purescript-incremental` library defines a small standard library of incremental data structures such as arrays, maps and records, and incremental functions like these.
+This is a simple example, but we can create incremental versions of many standard functions: maps, folds, `filter`, `zip`, and so on. `purescript-incremental-functions` defines a small standard library of incremental data structures such as arrays, maps and records, and incremental functions like these.
 
 To illustrate an important point, here is another example - an API for an incremental map data structure and a function to `map` a function over it:
 
@@ -118,7 +118,7 @@ data MapChange a da
   | Remove
   | Update da
 
-type MapChanges k a da = Map k (MapChange a da) 
+type MapChanges k a da = Map k (MapChange a da)
 -- ^ a potential change for each key
 
 map
@@ -136,15 +136,15 @@ Note that jet functions are used here to construct a _higher-order incremental f
 Since jet functions are just regular functions, we can compose them like functions, use lambda abstraction to form new functions, and so on. We are propagating changes by passing them from one function to the next. For example:
 
 ```purescript
-mapAtomic (_ + 1) 
+mapAtomic (_ + 1)
   :: Jet Int -> Jet Int
 
-map (mapAtomic (_ + 1)) 
+map (mapAtomic (_ + 1))
   :: Jet (Imap k Int)
   -> Jet (IMap k Int)
 
-\f -> map (map f) 
-  :: (Jet a -> Jet b) 
+\f -> map (map f)
+  :: (Jet a -> Jet b)
   -> Jet (IMap k1 (IMap k2 a))
   -> Jet (IMap k1 (IMap k2 b))
 ```
@@ -166,7 +166,7 @@ lower :: (Jet a -> Jet b) -> a -> b
 lower f a = (f { position: a, velocity: mempty }).position
 ```
 
-and 
+and
 
 ```purescript
 db = (f { position: a, velocity: da }).velocity
@@ -219,7 +219,7 @@ newtype ViewChanges = ViewChanges
   , handlers :: MapChanges String (Atomic EventListener) (Last EventListener)
   , kids     :: Array (ArrayChange View ViewChanges)
   }
-  
+
 instance patchView :: Patch View ViewChanges
 ```
 
@@ -236,12 +236,12 @@ element
   -> Jet View
 ```
 
-And now, a basic application loop is simple to implement. A component can be described by a jet function:
+And now, a basic application loop is easy enough to implement. A component can be described by a jet function of two arguments, a model, and a callback which responds to changes to the model:
 
 ```purescript
-type Component model 
-    = Jet (Change model -> EventListener) 
-   -> Jet model 
+type Component model
+    = Jet (Atomic (Change model -> EventListener))
+   -> Jet model
    -> Jet View
 ```
 
@@ -249,7 +249,7 @@ To start, we run this function in regular mode, passing in our initial model to 
 
 The function of type `Change model -> EventListener` takes changes generated by the view and applies them to the current model to obtain a change to the view. If we can write an interpreter which turns the `ViewChanges` change structure into _actual_ view changes, then we can update the DOM in response to user events.
 
-This interpreter is what my `purescript-purview` library provides. It is a barebones implementation of a change structure for the DOM which can be interpreted as _actual_ changes to the DOM. With this, we can implement a variety of different abstractions for building UIs which propagate incremental changes to the DOM.
+This interpreter is what my [`purescript-purview`](https://github.com/paf31/purescript-purview) library provides. It is a barebones implementation of a change structure for the DOM which can be interpreted as _actual_ changes to the DOM. With this, we can implement a variety of different abstractions for building UIs which propagate incremental changes to the DOM.
 
 The thing I like the most about this approach is that it really forces you think about the changes you plan to apply to your components before you start implementing them. In addition, these choices reflect the trade-offs in the various diffing algorithms which are implicit in some virtual DOM implementations. For example, "should I use an IMap or an IArray?" is similar to choosing between keyed and non-keyed implementations.
 
@@ -261,6 +261,6 @@ It also solves the problems with the "static DOM" approach that I listed above. 
 
 - There is no inherent performance penalty associated with random access to incremental arrays.
 - We don't need an event system at all, so there is no explosion of events.
-- Most interestingly, we don't need to materialize an entire model in order to apply a small change. We only deal with changes, and those changes are plain old data structures which can be easily sent over the network, allowing us to decouple view logic from view rendering. 
+- Most interestingly, we don't need to materialize an entire model in order to apply a small change. We only deal with changes, and those changes are plain old data structures which can be easily sent over the network, allowing us to decouple view logic from view rendering.
 
 In practice, this approach takes some getting used to if you are already used to a virtual DOM approach, but the fact that we're dealing with plain old functions makes it simple enough to get started and build real components.
