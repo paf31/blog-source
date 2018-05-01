@@ -83,10 +83,10 @@ defaultTemplate title subtitle rootPrefix body = do
       H.title $ H.toHtml $ "Functorial Blog - " ++ title
       H.link ! A.rel "stylesheet"
              ! A.type_ "text/css"
-             ! A.href "http://fonts.googleapis.com/css?family=Roboto+Slab:300"
+             ! A.href "//fonts.googleapis.com/css?family=Roboto+Slab:300"
       H.link ! A.rel "stylesheet"
              ! A.type_ "text/css"
-             ! A.href "http://fonts.googleapis.com/css?family=Roboto+Mono:300"
+             ! A.href "//fonts.googleapis.com/css?family=Roboto+Mono:300"
       H.link ! A.rel "stylesheet"
              ! A.type_ "text/css"
              ! A.href (fromString $ rootPrefix </> "assets" </> "default.css")
@@ -130,7 +130,7 @@ renderFeed :: [Post] -> RSS.RSS
 renderFeed posts =
   RSS.RSS "Functorial Blog"
           (URI.URI
-            "http:"
+            "https:"
             (Just (URI.URIAuth "" "blog.functorial.com" ""))
             "/feed.rss"
             ""
@@ -147,7 +147,7 @@ renderFeedPost post =
     [ RSS.Title title
     , RSS.Link $
         URI.URI
-          "http:"
+          "https:"
           (Just (URI.URIAuth "" "blog.functorial.com" ""))
           ("/posts/" ++ postFilename (filename post))
           ""
