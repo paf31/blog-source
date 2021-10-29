@@ -37,7 +37,7 @@ data Post = Post
   } deriving (Show, Eq)
 
 copyright :: String
-copyright = "© Phil Freeman 2010-2018"
+copyright = "© Phil Freeman 2010-2021"
 
 readTags :: String -> ([(String, String)], [String])
 readTags = readTags' False [] . splitOneOf "\n\r" where

@@ -1,0 +1,12 @@
+#graph {
+  border: 1px solid black;
+  overflow: auto;
+}
+  
+.clickable { 
+  cursor: pointer;
+}
+
+.section {
+  display: none;
+}
